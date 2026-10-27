@@ -1,7 +1,7 @@
 # Tasks
 
-Progress: 9 / 26 done (35%)
-[##############..........................]
+Progress: 16 / 26 done (62%)
+[#########################...............]
 
 | #   | Task                                                                                                             | Status         | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
@@ -14,14 +14,14 @@ Progress: 9 / 26 done (35%)
 | 7   | Auth: AuthProvider, sessionStorage, token expiry, expiry banner, logout                                          | ✅ Approved    | 3, 5       |
 | 8   | Login page with form validation and error states                                                                 | ✅ Approved    | 6, 7       |
 | 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | ✅ Approved    | 7, 8       |
-| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | 🔍 In review   | 2          |
-| 11  | TanStack Query setup, query keys, resource hooks                                                                 | ⬜ Not started | 5, 7       |
-| 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ⬜ Not started | 9, 10      |
-| 13  | New scan page, part 2: zip upload zone with validation                                                           | ⬜ Not started | 12         |
-| 14  | New scan page, part 3: DAST target selection from the allow-list                                                 | ⬜ Not started | 11, 12     |
-| 15  | New scan page, part 4: review step, submit flow, XHR upload with progress, retry, beforeunload                   | ⬜ Not started | 13, 14     |
-| 16  | Scan detail page: header, status timeline, polling with backoff and tab visibility                               | ⬜ Not started | 10, 11     |
-| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | ⬜ Not started | 15, 16     |
+| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | ✅ Approved    | 2          |
+| 11  | TanStack Query setup, query keys, resource hooks                                                                 | ✅ Approved    | 5, 7       |
+| 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ✅ Approved    | 9, 10      |
+| 13  | New scan page, part 2: zip upload zone with validation                                                           | ✅ Approved    | 12         |
+| 14  | New scan page, part 3: DAST target selection from the allow-list                                                 | ✅ Approved    | 11, 12     |
+| 15  | New scan page, part 4: review step, submit flow, XHR upload with progress, retry, beforeunload                   | ✅ Approved    | 13, 14     |
+| 16  | Scan detail page: header, status timeline, polling with backoff and tab visibility                               | ✅ Approved    | 10, 11     |
+| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | 🔨 In progress | 15, 16     |
 | 18  | Scans list page with filters, load more, auto-refresh                                                            | ⬜ Not started | 10, 11     |
 | 19  | Projects list page                                                                                               | ⬜ Not started | 10, 12     |
 | 20  | Project detail page: findings table, filters, search, sort, URL state, pagination                                | ⬜ Not started | 11, 18     |
@@ -37,6 +37,37 @@ Progress: 9 / 26 done (35%)
 - Plan v1: tests for schemas/client are written inside Tasks 4-5 (not deferred to 24) so each task is verifiable alone. Task 24 fills the remaining gaps.
 - Plan v1: query-param routes (`/scans/detail?jobId=`) instead of dynamic segments, because of static export.
 - Task 1 (revised): package manager is npm, not pnpm, per reviewer request. Lockfile is package-lock.json.
+- Task 16: the scan detail page polls one thing, `GET /scans/{jobId}`, every 5 seconds until COMPLETED or FAILED. It pauses while the tab is hidden and asks again the moment the tab is shown.
+- Task 16: after failed polls the wait doubles (5s, 10s, 20s, 40s, then 60s at most) and one good answer resets it. The last good scan stays on screen with "Reconnecting...". TanStack's own failure counters reset on every fetch, so consecutive failures are counted in `useScan`.
+- Task 16: a failed poll is not retried on top of the back-off, but the very first load is retried twice. A 404 on the first load shows "Scan not found" with a link back to the scans list.
+- Task 16: the timeline shows Created, Queued, Running and Completed or Failed with the time of each and how long it took after the step before. A scan that failed before a scanner picked it up shows Running as "skipped". The live "Running for 3m 12s" counter ticks every second only while RUNNING.
+- Task 16: the metadata section (requested by, image tag, created/started/finished) from section 6.4 is built in Task 17 with the other detail-page parts (summary, failure box, run-again button, slow-scan warning); it wasn't listed under either task, so I'm recording where it goes.
+- Task 16: `useScan` passes `retry` only while polling. Passing `retry: undefined` would silently replace the app-wide retry setting (a test caught that).
+- Task 15: `uploadFile` (XHR) sends exactly the pre-signed headers and no Authorization header, and takes an AbortSignal to cancel. XHR, not fetch, because only XHR reports upload progress.
+- Task 15: "Start scan" runs create → upload (code scans only) → queue → go to `/scans/detail/?jobId=…`. A failed step is retried from that step: a failed upload reuses the same job and the same upload URL; a failed queue step does not upload again.
+- Task 15: the upload link counts as expired 5 seconds before `expiresIn` runs out. After that, "Start over with a new scan" creates a new job and tells the user why, because the old URL can't work any more.
+- Task 15: closing or reloading the tab mid-run shows the browser's "Leave site?" prompt. Moving to another page inside the app cancels the upload and stops, so it can't pull the user back later. (The browser has no way to ask "leave?" for in-app links, so that case just cancels. It can leave a CREATED job that was never queued.)
+- Task 15: Start and Back are disabled while a run is in progress. A guard inside the hook (not only the disabled button) also stops a double click from making two jobs.
+- Task 15: screen readers hear the stage, and the upload in 25% steps rather than every percent. The progress bar itself is updated for every event.
+- Task 15: the project is added to the recent list when the job is created (Task 12 had also added it at the project step).
+- Task 15: the mock S3 now answers the browser's CORS preflight (`OPTIONS`) and sends CORS headers, like a real bucket must. This changed approved Task 6 code, and is needed to test the real XHR helper in jsdom.
+- Task 14: the target cards come only from `GET /targets`; there is no text field, so a URL can't be typed. A chosen or pre-filled (`&target=`) app only counts while it is still on the list the server just sent, so a made-up link value can never be submitted.
+- Task 14: the card styling from Task 12 moved into one shared `OptionCard`, now used by both the scan type and the test app steps, so they can't drift apart.
+- Task 14: loading shows card-shaped skeletons, an error shows the server message with Try again, and an empty list shows "No test apps are registered yet." with Continue disabled. The safety note is always visible.
+- Task 13: a file is accepted only if its name ends in `.zip` AND its browser-reported type is a zip type. Windows reports `application/x-zip-compressed`, and some systems report nothing or `application/octet-stream`, so those pass when the extension is right. This check only saves a wasted upload: the browser can't see inside a file, so the backend must validate it too (added to the backend page's open items).
+- Task 13: limit is exactly 50 MB (52,428,800 bytes, 1024-based); an empty file is rejected too. A rejected file never replaces one that was already accepted.
+- Task 13: the drop zone is a real file input inside a label, so keyboard and screen reader use needs no extra code. Dropping several files shows "Choose one .zip file at a time."
+- Task 13: the step title for the third step now depends on the type ("Upload your code" / "Choose a test app"), and step 4 is titled "Review and start" (built in Task 15).
+- Task 12: the new-scan page is a 4-step wizard (type, project, upload or target, review). This task builds steps 1 and 2; steps 3 and 4 show a "built in Task N" note until Tasks 13 to 15. The third step is named after the type (Upload code / Choose app).
+- Task 12: the scan type cards are real radio buttons, so arrow keys and screen readers work without extra code, and the selected card also shows a check mark (not colour alone).
+- Task 12: project ID rules live in one place (`lib/validation/project-id.ts`) with a plain-words message for each problem. The ID is not trimmed or lower-cased for the user: a space or capital letter is reported, not silently changed.
+- Task 12: a project ID is added to the recent list when the user continues past step 2 (not only when a scan is created), so suggestions work as soon as you have used an ID. Task 15 will add it again on creation, which just moves it to the front.
+- Task 12: `/scans/new/?type=SAST|DAST&project=<id>` pre-fills the form and starts at step 2, for Task 17's "Start the same scan again". Invalid values are ignored. The target parameter is added with the target step in Task 14.
+- Task 11: `useApi()` builds the logged-in API client from the config URL and the current token. A 401 logs out as "expired", and only once even if several requests fail together.
+- Task 11: `SessionProviders` puts the query cache and login together and empties the cache on every logout, so the next person on the tab never sees the previous person's data.
+- Task 11: retry policy: queries retry twice, and only for things that can pass by themselves (no answer, timeout, 5xx, 408, 429). 4xx answers and unreadable responses are not retried. Mutations never retry, so a failed "create scan" can't make two jobs.
+- Task 11: `useScan` treats COMPLETED and FAILED as final (kept forever, no refetch on focus) and unfinished scans as always stale. The 5-second polling with back-off and tab-visibility pause is Task 16, as planned. `useProjectScans` is an infinite query (cursor "Load more") and takes an optional `refetchInterval` for Task 18's 15-second refresh.
+- Task 11: no React Query devtools (a new dependency you didn't ask for).
 - Task 10: toasts use `sonner` with our own small wrapper (`ui/toaster.tsx`). shadcn's version needs `next-themes`, and we already have a theme provider. The "You have been logged out." notice from Task 8 is now a toast, as planned.
 - Task 10: status and severity colours live in the two badge files, as fixed colours separate from the accent, so a future accent change can't turn "Failed" or "High" a different colour. Labels are Title case (Running, High) and always shown next to the colour.
 - Task 10: `RelativeTime` is keyboard-focusable so its tooltip (full local date and time) works without a mouse. It re-reads the clock every 30 seconds so "3 minutes ago" keeps moving.

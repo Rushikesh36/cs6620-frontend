@@ -47,3 +47,20 @@ export function CardGridSkeleton({ cards = 4 }: { cards?: number }) {
     </LoadingRegion>
   );
 }
+
+/** Placeholder for a row of selectable cards, like the test apps to choose from. */
+export function OptionCardsSkeleton({ label, cards = 2 }: { label: string; cards?: number }) {
+  return (
+    <LoadingRegion label={label}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="border-border space-y-3 rounded-xl border-2 p-5">
+            <Skeleton className="size-8" />
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        ))}
+      </div>
+    </LoadingRegion>
+  );
+}

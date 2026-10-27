@@ -3,9 +3,9 @@ import Script from 'next/script';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from '@/lib/auth/auth-provider';
 import { ConfigProvider } from '@/lib/config-provider';
 import { MockGate } from '@/lib/mock-gate';
+import { SessionProviders } from '@/lib/query/query-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <ConfigProvider>
               <MockGate>
-                <AuthProvider>{children}</AuthProvider>
+                <SessionProviders>{children}</SessionProviders>
               </MockGate>
             </ConfigProvider>
             <Toaster />

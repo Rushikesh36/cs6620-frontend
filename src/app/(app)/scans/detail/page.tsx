@@ -1,5 +1,15 @@
-import { PagePlaceholder } from '@/components/common/page-placeholder';
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { FullPageLoader } from '@/components/common/full-page-loader';
+import { ScanDetail } from '@/components/scans/scan-detail';
 
-export default function Page() {
-  return <PagePlaceholder title="Scan details" task={16} />;
+export const metadata: Metadata = { title: 'Scan details · Unified Security Hub' };
+
+export default function ScanDetailPage() {
+  // useSearchParams needs a Suspense boundary in a statically exported page.
+  return (
+    <Suspense fallback={<FullPageLoader />}>
+      <ScanDetail />
+    </Suspense>
+  );
 }

@@ -6,6 +6,12 @@ import { MOCK_UPLOAD_ORIGIN, type MockBackend, type Result } from './backend';
 type Params = Readonly<Record<string, string | readonly string[] | undefined>>;
 type Context = { request: Request; params: Params; user: User };
 
+const S3_CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'PUT',
+  'Access-Control-Allow-Headers': 'content-type',
+};
+
 const errorResponse = (status: number, error: string) => HttpResponse.json({ error }, { status });
 
 function param(params: Params, name: string): string {
@@ -106,12 +112,18 @@ export function createHandlers(baseUrl: string, backend: MockBackend) {
     ),
 
     // Fake S3. No token check: the real one is secured by the pre-signed URL itself.
+    // Like a real bucket, it needs a CORS rule that allows PUT from the website. The browser asks
+    // first (a preflight OPTIONS request) because Content-Type: application/zip is not a "simple" header.
+    http.options(
+      `${MOCK_UPLOAD_ORIGIN}/uploads/:jobId`,
+      () => new HttpResponse(null, { status: 204, headers: S3_CORS_HEADERS }),
+    ),
     http.put(`${MOCK_UPLOAD_ORIGIN}/uploads/:jobId`, async ({ request, params }) => {
       await delay(backend.options.uploadDelayMs);
       const result = backend.receiveUpload(param(params, 'jobId'), request.headers);
       return result.ok
-        ? new HttpResponse(null, { status: 200 })
-        : new HttpResponse(result.error, { status: result.status });
+        ? new HttpResponse(null, { status: 200, headers: S3_CORS_HEADERS })
+        : new HttpResponse(result.error, { status: result.status, headers: S3_CORS_HEADERS });
     }),
   ];
 }

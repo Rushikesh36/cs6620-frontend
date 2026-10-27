@@ -37,3 +37,14 @@ export function formatFullDateTime(date: DateInput): string {
   const value = new Date(date);
   return Number.isNaN(value.getTime()) ? 'Unknown time' : format(value, 'PPpp');
 }
+
+/** 1536 becomes "1.5 KB". Uses 1024, the same as the 50 MB upload limit. */
+export function formatFileSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / 1024 ** index;
+  // No decimals for bytes, and for round numbers like "50 MB".
+  const text = index === 0 || Number.isInteger(value) ? String(value) : value.toFixed(1);
+  return `${text} ${units[index]}`;
+}

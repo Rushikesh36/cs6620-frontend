@@ -19,6 +19,9 @@ export const MOCK_UPLOAD_ORIGIN = 'https://mock-upload.s3.amazonaws.com';
 const UPLOAD_EXPIRES_IN_SECONDS = 900;
 const QUEUED_MS = 5_000; // from /start until a scanner picks the job up
 const RUNNING_MS = 15_000; // time the scanner works
+// stuck-demo scans pretend to have been queued this long ago, so the "taking longer than usual"
+// warning (shown after 25 minutes of running) can be seen without waiting.
+const STUCK_AGE_MS = 26 * 60_000;
 const STORAGE_KEY = 'ush-mock-backend-v1';
 const PROJECT_ID_RULE = /^[a-z][a-z0-9-]{2,49}$/;
 
@@ -161,7 +164,7 @@ export class MockBackend {
       scanType: request.scanType,
       targetId: request.scanType === 'DAST' ? request.targetId : null,
       requestedBy: user.username,
-      createdAt: now,
+      createdAt: request.projectId === 'stuck-demo' ? now - STUCK_AGE_MS - 1000 : now,
       uploadExpiresAt: request.scanType === 'SAST' ? now + UPLOAD_EXPIRES_IN_SECONDS * 1000 : null,
       uploaded: false,
       startRequestedAt: null,
@@ -209,7 +212,8 @@ export class MockBackend {
     if (job.scanType === 'SAST' && !job.uploaded) {
       return fail(400, 'Upload the code as a .zip file before starting the scan.');
     }
-    job.startRequestedAt = this.options.now();
+    const now = this.options.now();
+    job.startRequestedAt = job.outcome === 'stuck' ? now - STUCK_AGE_MS : now;
     this.save();
     return succeed({ jobId: job.jobId, status: 'QUEUED' });
   }

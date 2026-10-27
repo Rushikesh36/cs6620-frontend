@@ -380,3 +380,68 @@ describe('mock scan history', () => {
     });
   });
 });
+
+describe('mock request checking', () => {
+  const post = (path: string, body: unknown, withToken = true) =>
+    fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(withToken && token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    });
+  const errorOf = async (response: Response) =>
+    ((await response.json()) as { error: string }).error;
+
+  it('login: a body that is not JSON, or has no password, is a 400 with a message', async () => {
+    useBackend();
+    for (const body of ['not json', { username: 'demo' }, {}]) {
+      const response = await post('/login', body, false);
+      expect(response.status).toBe(400);
+      expect(await errorOf(response)).toBe('Enter a username and a password.');
+    }
+  });
+
+  it('create scan: a missing project or an unknown scan type is a 400', async () => {
+    useBackend();
+    await loginAs();
+    for (const body of ['not json', {}, { projectId: 'my-app', scanType: 'IAST' }]) {
+      const response = await post('/scans', body);
+      expect(response.status).toBe(400);
+      expect(await errorOf(response)).toMatch(/missing a project ID or has an unknown scan type/);
+    }
+  });
+
+  it('create scan: an app scan without a test app is told to choose one', async () => {
+    useBackend();
+    await loginAs();
+    const response = await post('/scans', { projectId: 'my-app', scanType: 'DAST' });
+    expect(response.status).toBe(400);
+    expect(await errorOf(response)).toBe('Choose a test app to scan.');
+  });
+
+  it('findings: the scan type is required and must be SAST or DAST', async () => {
+    useBackend();
+    await loginAs();
+    for (const query of ['', '?scanType=IAST']) {
+      const response = await fetch(`${BASE}/projects/demo-app/findings${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      expect(response.status).toBe(400);
+      expect(await errorOf(response)).toBe('scanType must be SAST or DAST.');
+    }
+  });
+
+  it('the project "many-findings" has 120 findings of each type, all matching the contract', async () => {
+    useBackend();
+    await loginAs();
+    for (const scanType of ['SAST', 'DAST'] as const) {
+      const { items } = await api.getFindings('many-findings', scanType);
+      expect(items).toHaveLength(120);
+      expect(new Set(items.map((f) => f.fingerprint)).size).toBe(120);
+      expect(items.some((f) => f.state === 'FIXED')).toBe(true);
+      expect(items.some((f) => f.message.length > 140)).toBe(true); // so "Show more" can be tried
+    }
+  });
+});

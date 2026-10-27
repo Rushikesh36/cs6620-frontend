@@ -1,6 +1,6 @@
 'use client';
 
-import { FileSearch, SearchX } from 'lucide-react';
+import { Download, FileSearch, SearchX } from 'lucide-react';
 import Link from 'next/link';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/button';
 import { useFindings } from '@/hooks/use-findings';
 import { useUrlParams } from '@/hooks/use-url-params';
 import type { ScanType } from '@/lib/api/schemas';
+import { findingsFilename, findingsToCsv } from '@/lib/utils/csv';
+import { downloadTextFile } from '@/lib/utils/download';
+import { FindingDrawer } from './finding-drawer';
 import {
   countBySeverity,
   filterFindings,
@@ -24,6 +27,7 @@ import { FindingsFilters } from './findings-filters';
 import { FindingsTable } from './findings-table';
 import { SeverityFilter } from './severity-filter';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const TYPE_NAMES: Record<ScanType, string> = { SAST: 'code scan', DAST: 'app scan' };
 
@@ -40,6 +44,7 @@ export function FindingsPanel({ projectId, scanType }: { projectId: string; scan
   const requestedPage = parsePage(params.get('page'));
   // Bumped by "Clear filters", so the search box starts over empty.
   const [searchKey, setSearchKey] = useState(0);
+  const [selectedFingerprint, setSelectedFingerprint] = useState<string | null>(null);
 
   // Any change to a filter or the sort starts again at page 1.
   const change = (updates: Record<string, string | null>) => setParams({ ...updates, page: null });
@@ -86,6 +91,8 @@ export function FindingsPanel({ projectId, scanType }: { projectId: string; scan
     sort,
   );
   const page = paginate(shown, requestedPage);
+  // If a refresh removes the finding that is open, the drawer closes with it.
+  const selected = findings.find((f) => f.fingerprint === selectedFingerprint) ?? null;
   const canClear =
     severities.length > 0 || state !== 'open' || query.trim() !== '' || sort !== 'severity';
 
@@ -136,7 +143,26 @@ export function FindingsPanel({ projectId, scanType }: { projectId: string; scan
         />
       ) : (
         <>
-          <FindingsTable findings={page.items} />
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Every finding that matches the filters, not just the page on screen.
+                downloadTextFile(findingsFilename(projectId, scanType), findingsToCsv(shown));
+                toast.success(
+                  `Exported ${shown.length} ${shown.length === 1 ? 'finding' : 'findings'} to CSV`,
+                );
+              }}
+            >
+              <Download aria-hidden />
+              Export CSV{' '}
+              <span className="sr-only">({shown.length} findings that match the filters)</span>
+            </Button>
+          </div>
+          <FindingsTable
+            findings={page.items}
+            onSelect={(f) => setSelectedFingerprint(f.fingerprint)}
+          />
           <Pagination
             page={page.page}
             pages={page.pages}
@@ -148,6 +174,7 @@ export function FindingsPanel({ projectId, scanType }: { projectId: string; scan
           />
         </>
       )}
+      <FindingDrawer finding={selected} onClose={() => setSelectedFingerprint(null)} />
     </div>
   );
 }

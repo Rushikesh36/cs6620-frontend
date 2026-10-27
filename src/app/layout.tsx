@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { BASE_POLICY } from '@/lib/csp';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -21,6 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // suppressHydrationWarning: the init script adds the "dark" class before React hydrates.
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Production only: the dev server needs things a strict policy would block. */}
+        {process.env.NODE_ENV === 'production' && (
+          <meta httpEquiv="Content-Security-Policy" content={BASE_POLICY} />
+        )}
+      </head>
       <body>
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT}

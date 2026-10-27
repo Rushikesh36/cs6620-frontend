@@ -12,7 +12,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev:mock": "NEXT_PUBLIC_USE_MOCKS=true next dev",
-    "build:mock": "NEXT_PUBLIC_USE_MOCKS=true next build"
+    "build:mock": "NEXT_PUBLIC_USE_MOCKS=true next build",
+    "test:coverage": "vitest run --coverage",
+    "build:e2e": "NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_MOCK_FAILURE_RATE=0 NEXT_PUBLIC_MOCK_TIME_SCALE=0.1 next build",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -32,6 +35,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
@@ -40,6 +44,7 @@
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.13.0",
     "eslint-config-next": "16.4.3",
     "jsdom": "^29.1.1",
@@ -55,5 +60,8 @@
     "workerDirectory": [
       "public"
     ]
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

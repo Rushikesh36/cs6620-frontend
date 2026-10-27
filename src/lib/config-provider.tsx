@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigErrorScreen } from '@/components/config/config-error-screen';
 import { FullPageLoader } from '@/components/common/full-page-loader';
+import { ConnectPolicy } from '@/components/security/connect-policy';
 import { ConfigError, loadConfig, type AppConfig } from '@/lib/config';
 
 type ConfigState =
@@ -42,7 +43,12 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   if (state.status === 'loading') return <FullPageLoader label="Loading configuration" />;
   if (state.status === 'error') return <ConfigErrorScreen error={state.error} onRetry={retry} />;
-  return <ConfigContext.Provider value={state.config}>{children}</ConfigContext.Provider>;
+  return (
+    <ConfigContext.Provider value={state.config}>
+      <ConnectPolicy apiBaseUrl={state.config.apiBaseUrl} />
+      {children}
+    </ConfigContext.Provider>
+  );
 }
 
 export function useConfig(): AppConfig {

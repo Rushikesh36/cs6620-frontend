@@ -45,6 +45,14 @@ describe('LoginScreen', () => {
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
   });
 
+  it('has one top heading, and a main area, for screen readers', () => {
+    render(<LoginScreen />);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Unified Security Hub' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
   it('asks for both fields and does not call the server when they are empty', async () => {
     const user = userEvent.setup();
     render(<LoginScreen />);

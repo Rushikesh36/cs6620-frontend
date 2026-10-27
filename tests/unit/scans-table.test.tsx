@@ -37,10 +37,10 @@ const clean = scan({
   summary: { new: 0, newHigh: 0, stillOpen: 3, fixed: 1 },
 });
 
-const renderTable = (scans: Scan[]) =>
+const renderTable = (scans: Scan[], showProject = false) =>
   render(
     <TooltipProvider>
-      <ScansTable scans={scans} />
+      <ScansTable scans={scans} showProject={showProject} />
     </TooltipProvider>,
   );
 const table = () => screen.getByRole('table');
@@ -121,6 +121,36 @@ describe('ScansTable (wide screens)', () => {
       .setup()
       .click(within(rows()[0] as HTMLElement).getByRole('button', { name: 'Copy job ID' }));
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe('ScansTable with a project column', () => {
+  it('adds a Project column after Status, linking to each project', () => {
+    renderTable([completed], true);
+    const headings = within(table())
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent);
+    expect(headings.slice(0, 3)).toEqual(['Status', 'Project', 'Scan type']);
+    expect(headings).toHaveLength(8);
+
+    const link = within(rows()[0] as HTMLElement).getByRole('link', { name: 'demo-app' });
+    expect(link.getAttribute('href')).toMatch(/^\/projects\/detail\/?\?projectId=demo-app$/);
+  });
+
+  it('also shows the project on the phone cards', () => {
+    renderTable([completed], true);
+    const card = within(screen.getByRole('list', { name: 'Scans' })).getAllByRole(
+      'listitem',
+    )[0] as HTMLElement;
+    expect(within(card).getByText('Project')).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'demo-app' })).toBeInTheDocument();
+  });
+
+  it('has no Project column unless asked for', () => {
+    renderTable([completed]);
+    expect(
+      within(table()).queryByRole('columnheader', { name: 'Project' }),
+    ).not.toBeInTheDocument();
   });
 });
 

@@ -32,7 +32,7 @@ describe('FindingStateBadge', () => {
 
 describe('FindingsTable', () => {
   it('has the seven columns from the spec', () => {
-    render(<FindingsTable findings={[finding()]} />);
+    render(<FindingsTable findings={[finding()]} onSelect={() => {}} />);
     const headings = within(screen.getByRole('table'))
       .getAllByRole('columnheader')
       .map((h) => h.textContent);
@@ -48,7 +48,12 @@ describe('FindingsTable', () => {
   });
 
   it('shows each finding with its badges, texts and links to the scans that saw it', () => {
-    render(<FindingsTable findings={[finding({ state: 'FIXED', severity: 'MEDIUM' })]} />);
+    render(
+      <FindingsTable
+        findings={[finding({ state: 'FIXED', severity: 'MEDIUM' })]}
+        onSelect={() => {}}
+      />,
+    );
     const row = within(screen.getAllByRole('row')[1] as HTMLElement);
 
     expect(row.getByText('Medium')).toBeInTheDocument();
@@ -65,7 +70,7 @@ describe('FindingsTable', () => {
 
   it('cuts a long message short, and shows all of it on request', async () => {
     const long = 'This is a very long explanation. '.repeat(10).trim();
-    render(<FindingsTable findings={[finding({ message: long })]} />);
+    render(<FindingsTable findings={[finding({ message: long })]} onSelect={() => {}} />);
     const row = within(screen.getAllByRole('row')[1] as HTMLElement);
     const toggle = row.getByRole('button', { name: /Show more/ });
 
@@ -79,12 +84,14 @@ describe('FindingsTable', () => {
   });
 
   it('gives a short message no toggle', () => {
-    render(<FindingsTable findings={[finding()]} />);
+    render(<FindingsTable findings={[finding()]} onSelect={() => {}} />);
     expect(screen.queryByRole('button', { name: /Show more/ })).not.toBeInTheDocument();
   });
 
   it('describes which message a toggle belongs to, for screen readers', () => {
-    render(<FindingsTable findings={[finding({ message: 'x'.repeat(200) })]} />);
+    render(
+      <FindingsTable findings={[finding({ message: 'x'.repeat(200) })]} onSelect={() => {}} />,
+    );
     expect(
       screen.getAllByRole('button', {
         name: /Show more of the python\.lang\.security\.audit\.eval-detected message/,
@@ -96,6 +103,7 @@ describe('FindingsTable', () => {
     render(
       <FindingsTable
         findings={[finding(), finding({ fingerprint: 'e'.repeat(64), ruleId: 'other.rule' })]}
+        onSelect={() => {}}
       />,
     );
     const cards = within(screen.getByRole('list', { name: 'Findings' })).getAllByRole('listitem');
@@ -106,9 +114,59 @@ describe('FindingsTable', () => {
 
   it('shows hostile text as text, never as markup', () => {
     const evil = '<img src=x onerror=alert(1)>';
-    render(<FindingsTable findings={[finding({ ruleId: evil, location: evil, message: evil })]} />);
+    render(
+      <FindingsTable
+        findings={[finding({ ruleId: evil, location: evil, message: evil })]}
+        onSelect={() => {}}
+      />,
+    );
     expect(screen.getAllByText(evil).length).toBeGreaterThanOrEqual(3);
     expect(document.querySelector('img')).not.toBeInTheDocument();
+  });
+});
+
+describe('FindingsTable: opening the details', () => {
+  it('opens a finding from its rule ID button, which the keyboard can reach', async () => {
+    const onSelect = vi.fn();
+    const first = finding();
+    render(<FindingsTable findings={[first]} onSelect={onSelect} />);
+    const row = within(screen.getAllByRole('row')[1] as HTMLElement);
+
+    const button = row.getByRole('button', { name: 'python.lang.security.audit.eval-detected' });
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog');
+    button.focus();
+    await userEvent.setup().keyboard('{Enter}');
+
+    expect(onSelect).toHaveBeenCalledWith(first);
+  });
+
+  it('also opens it when the row is clicked, but not when a link inside is clicked', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(<FindingsTable findings={[finding()]} onSelect={onSelect} />);
+    const row = within(screen.getAllByRole('row')[1] as HTMLElement);
+
+    await user.click(row.getByText('app/views.py:42'));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+
+    await user.click(row.getByRole('link', { name: '3f9a1c0e…' }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens a finding from its card on phones', async () => {
+    const onSelect = vi.fn();
+    render(<FindingsTable findings={[finding()]} onSelect={onSelect} />);
+    const card = within(screen.getByRole('list', { name: 'Findings' })).getAllByRole(
+      'listitem',
+    )[0] as HTMLElement;
+
+    await userEvent
+      .setup()
+      .click(
+        within(card).getByRole('button', { name: 'python.lang.security.audit.eval-detected' }),
+      );
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 });
 

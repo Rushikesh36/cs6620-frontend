@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { FullPageLoader } from '@/components/common/full-page-loader';
 import { LoginForm } from '@/components/auth/login-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { safeRedirectPath } from '@/lib/auth/redirect';
 
@@ -40,7 +40,7 @@ export function LoginScreen() {
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <ShieldCheck className="text-primary size-10" aria-hidden />
-          <CardTitle className="text-xl">Unified Security Hub</CardTitle>
+          <h1 className="text-xl font-semibold">Unified Security Hub</h1>
           <CardDescription>
             Scan your code and running apps for security problems, and review every finding in one
             place.

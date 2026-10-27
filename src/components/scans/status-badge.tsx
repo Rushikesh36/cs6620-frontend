@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 // Colours come from the spec: gray (created, queued), blue (running), green, red.
 // The text label is always shown too, so colour is never the only signal.
-const STYLES: Record<ScanStatus, { label: string; className: string }> = {
+export const STATUS_BADGE_STYLES: Record<ScanStatus, { label: string; className: string }> = {
   CREATED: {
     label: 'Created',
     className:
@@ -55,7 +55,7 @@ function StatusIcon({ status }: { status: ScanStatus }) {
 }
 
 export function StatusBadge({ status, className }: { status: ScanStatus; className?: string }) {
-  const style = STYLES[status];
+  const style = STATUS_BADGE_STYLES[status];
   return (
     <Badge variant="outline" className={cn(style.className, className)}>
       <StatusIcon status={status} />

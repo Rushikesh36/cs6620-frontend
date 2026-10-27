@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 // Colours come from the spec: HIGH red, MEDIUM orange, LOW yellow, INFO gray.
 // The text label is always shown too, so colour is never the only signal.
-const STYLES: Record<Severity, { label: string; className: string }> = {
+export const SEVERITY_BADGE_STYLES: Record<Severity, { label: string; className: string }> = {
   HIGH: {
     label: 'High',
     className:
@@ -28,7 +28,7 @@ const STYLES: Record<Severity, { label: string; className: string }> = {
 };
 
 export function SeverityBadge({ severity, className }: { severity: Severity; className?: string }) {
-  const style = STYLES[severity];
+  const style = SEVERITY_BADGE_STYLES[severity];
   return (
     <Badge variant="outline" className={cn(style.className, className)}>
       {style.label}

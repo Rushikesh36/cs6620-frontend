@@ -3,14 +3,18 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FindingsPanel } from '@/components/findings/findings-panel';
 import { ApiError } from '@/lib/api/client';
+import { downloadTextFile } from '@/lib/utils/download';
 import type { Finding } from '@/lib/api/schemas';
 
-const { urlState, setParams, findingsQuery, hookArgs } = vi.hoisted(() => ({
+const { urlState, setParams, findingsQuery, hookArgs, download } = vi.hoisted(() => ({
   urlState: { current: '' },
   setParams: vi.fn(),
   findingsQuery: { current: {} as Record<string, unknown> },
   hookArgs: { current: [] as unknown[] },
+  download: vi.fn(),
 }));
+vi.mock('@/lib/utils/download', () => ({ downloadTextFile: download }));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/hooks/use-url-params', () => ({
   useUrlParams: () => ({ params: new URLSearchParams(urlState.current), setParams }),
 }));
@@ -64,9 +68,10 @@ const rowRules = () =>
   within(screen.getByRole('table'))
     .getAllByRole('row')
     .slice(1)
-    .map((row) => row.querySelector('code')?.textContent);
+    .map((row) => row.querySelector('button')?.textContent);
 
 beforeEach(() => {
+  download.mockClear();
   urlState.current = '';
   setParams.mockClear();
   refetch.mockClear();
@@ -305,5 +310,78 @@ describe('FindingsPanel: paging, 50 at a time', () => {
     expect(setParams).toHaveBeenLastCalledWith({ page: '3' });
     await user.click(screen.getByRole('button', { name: /Previous/ }));
     expect(setParams).toHaveBeenLastCalledWith({ page: null });
+  });
+});
+
+describe('FindingsPanel: details drawer', () => {
+  it('opens the details of the finding you click, and closes again', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getAllByRole('button', { name: 'python.md5' })[0] as HTMLElement);
+    const dialog = screen.getByRole('dialog', { name: 'Finding details' });
+    expect(dialog).toHaveTextContent('auth/tokens.py:23');
+    expect(dialog).toHaveTextContent(md5.fingerprint);
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('closes by itself if a refresh removes the finding that is open', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderPanel();
+    await user.click(screen.getAllByRole('button', { name: 'python.md5' })[0] as HTMLElement);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    loaded([eval_, info]);
+    rerender(<FindingsPanel projectId="demo-app" scanType="SAST" />);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('FindingsPanel: export CSV', () => {
+  const csvText = () => download.mock.calls[0]?.[1] as string;
+
+  it('exports the findings that match the filters, in the order shown, as a CSV file', async () => {
+    urlState.current = 'severity=HIGH,MEDIUM&state=all';
+    renderPanel();
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /Export CSV/ }));
+
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(download.mock.calls[0]?.[0]).toMatch(/^findings-demo-app-sast-\d{4}-\d{2}-\d{2}\.csv$/);
+    const lines = csvText().trim().split('\r\n');
+    expect(lines).toHaveLength(4); // header + eval, pickle, md5
+    expect(lines[1]).toContain('python.eval');
+    expect(lines[2]).toContain('python.pickle');
+    expect(lines[3]).toContain('python.md5');
+    expect(csvText()).not.toContain('python.encoding');
+  });
+
+  it('exports every matching finding, not only the page on screen', async () => {
+    loaded(
+      Array.from({ length: 120 }, (_, i) => finding({ ruleId: `rule-${i}`, location: `loc-${i}` })),
+    );
+    renderPanel();
+    expect(rowRules()).toHaveLength(50);
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /Export CSV/ }));
+
+    expect(csvText().trim().split('\r\n')).toHaveLength(121);
+  });
+
+  it('says how many findings it exports, for screen readers', () => {
+    renderPanel();
+    expect(
+      screen.getByRole('button', { name: /Export CSV \(3 findings that match the filters\)/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('has no export button when nothing is shown', () => {
+    urlState.current = 'severity=LOW';
+    renderPanel();
+    expect(screen.queryByRole('button', { name: /Export CSV/ })).not.toBeInTheDocument();
+    expect(downloadTextFile).not.toHaveBeenCalled();
   });
 });

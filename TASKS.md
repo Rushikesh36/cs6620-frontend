@@ -1,43 +1,73 @@
 # Tasks
 
-Progress: 17 / 26 approved (65%) · built and awaiting your review: 18, 19
-[##########################..............]
+Progress: 26 / 26 done (100%)
+[########################################]
 
-| #   | Task                                                                                                             | Status         | Depends on |
-| --- | ---------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
-| 1   | Project setup: Next.js, TypeScript strict, Tailwind, ESLint, Prettier, npm, static export config                 | ✅ Approved    |            |
-| 2   | shadcn/ui setup, base theme (red accent), dark mode toggle, fonts                                                | ✅ Approved    | 1          |
-| 3   | Runtime config loader (/config.json), ConfigProvider, configuration error screen                                 | ✅ Approved    | 1, 2       |
-| 4   | Zod schemas and TypeScript types for the full API contract (+ schema tests)                                      | ✅ Approved    | 1          |
-| 5   | API client (fetch wrapper, ApiError, timeout, auth header) and endpoints, with unit tests                        | ✅ Approved    | 3, 4       |
-| 6   | MSW mock backend: login, targets, create/start scan, job lifecycle, findings, error flags                        | ✅ Approved    | 4          |
-| 7   | Auth: AuthProvider, sessionStorage, token expiry, expiry banner, logout                                          | ✅ Approved    | 3, 5       |
-| 8   | Login page with form validation and error states                                                                 | ✅ Approved    | 6, 7       |
-| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | ✅ Approved    | 7, 8       |
-| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | ✅ Approved    | 2          |
-| 11  | TanStack Query setup, query keys, resource hooks                                                                 | ✅ Approved    | 5, 7       |
-| 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ✅ Approved    | 9, 10      |
-| 13  | New scan page, part 2: zip upload zone with validation                                                           | ✅ Approved    | 12         |
-| 14  | New scan page, part 3: DAST target selection from the allow-list                                                 | ✅ Approved    | 11, 12     |
-| 15  | New scan page, part 4: review step, submit flow, XHR upload with progress, retry, beforeunload                   | ✅ Approved    | 13, 14     |
-| 16  | Scan detail page: header, status timeline, polling with backoff and tab visibility                               | ✅ Approved    | 10, 11     |
-| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | ✅ Approved    | 15, 16     |
-| 18  | Scans list page with filters, load more, auto-refresh                                                            | 🔍 In review   | 10, 11     |
-| 19  | Projects list page                                                                                               | 🔍 In review   | 10, 12     |
-| 20  | Project detail page: findings table, filters, search, sort, URL state, pagination                                | 🔨 In progress | 11, 18     |
-| 21  | Finding detail drawer and CSV export                                                                             | ⬜ Not started | 20         |
-| 22  | Dashboard page: summary cards, recent scans, empty state                                                         | ⬜ Not started | 18         |
-| 23  | 404 page, CSP meta tag, accessibility pass (keyboard, focus, aria-live, contrast)                                | ⬜ Not started | 1-22       |
-| 24  | Unit and component tests to cover section 12 (gaps only; most written alongside tasks)                           | ⬜ Not started | 1-22       |
-| 25  | Playwright end-to-end tests from section 12                                                                      | ⬜ Not started | 1-23       |
-| 26  | Deploy script, caching headers, README                                                                           | ⬜ Not started | 1-25       |
+| #   | Task                                                                                                             | Status      | Depends on |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ----------- | ---------- |
+| 1   | Project setup: Next.js, TypeScript strict, Tailwind, ESLint, Prettier, npm, static export config                 | ✅ Approved |            |
+| 2   | shadcn/ui setup, base theme (red accent), dark mode toggle, fonts                                                | ✅ Approved | 1          |
+| 3   | Runtime config loader (/config.json), ConfigProvider, configuration error screen                                 | ✅ Approved | 1, 2       |
+| 4   | Zod schemas and TypeScript types for the full API contract (+ schema tests)                                      | ✅ Approved | 1          |
+| 5   | API client (fetch wrapper, ApiError, timeout, auth header) and endpoints, with unit tests                        | ✅ Approved | 3, 4       |
+| 6   | MSW mock backend: login, targets, create/start scan, job lifecycle, findings, error flags                        | ✅ Approved | 4          |
+| 7   | Auth: AuthProvider, sessionStorage, token expiry, expiry banner, logout                                          | ✅ Approved | 3, 5       |
+| 8   | Login page with form validation and error states                                                                 | ✅ Approved | 6, 7       |
+| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | ✅ Approved | 7, 8       |
+| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | ✅ Approved | 2          |
+| 11  | TanStack Query setup, query keys, resource hooks                                                                 | ✅ Approved | 5, 7       |
+| 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ✅ Approved | 9, 10      |
+| 13  | New scan page, part 2: zip upload zone with validation                                                           | ✅ Approved | 12         |
+| 14  | New scan page, part 3: DAST target selection from the allow-list                                                 | ✅ Approved | 11, 12     |
+| 15  | New scan page, part 4: review step, submit flow, XHR upload with progress, retry, beforeunload                   | ✅ Approved | 13, 14     |
+| 16  | Scan detail page: header, status timeline, polling with backoff and tab visibility                               | ✅ Approved | 10, 11     |
+| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | ✅ Approved | 15, 16     |
+| 18  | Scans list page with filters, load more, auto-refresh                                                            | ✅ Approved | 10, 11     |
+| 19  | Projects list page                                                                                               | ✅ Approved | 10, 12     |
+| 20  | Project detail page: findings table, filters, search, sort, URL state, pagination                                | ✅ Approved | 11, 18     |
+| 21  | Finding detail drawer and CSV export                                                                             | ✅ Approved | 20         |
+| 22  | Dashboard page: summary cards, recent scans, empty state                                                         | ✅ Approved | 18         |
+| 23  | 404 page, CSP meta tag, accessibility pass (keyboard, focus, aria-live, contrast)                                | ✅ Approved | 1-22       |
+| 24  | Unit and component tests to cover section 12 (gaps only; most written alongside tasks)                           | ✅ Approved | 1-22       |
+| 25  | Playwright end-to-end tests from section 12                                                                      | ✅ Approved | 1-23       |
+| 26  | Deploy script, caching headers, README                                                                           | ✅ Approved | 1-25       |
 
 ## Decisions log
 
 - Plan v1: tests for schemas/client are written inside Tasks 4-5 (not deferred to 24) so each task is verifiable alone. Task 24 fills the remaining gaps.
 - Plan v1: query-param routes (`/scans/detail?jobId=`) instead of dynamic segments, because of static export.
 - Task 1 (revised): package manager is npm, not pnpm, per reviewer request. Lockfile is package-lock.json.
+- All 26 tasks approved. (Tasks 18 to 26 were built back to back at the user's request and reviewed together afterwards.)
 - Workflow change (after Task 17, at the user's request): the next task now starts right after the previous one is built and checked, without waiting for "approved". Finished-but-unreviewed tasks stay "🔍 In review" and are not counted as approved. Review comments on any of them are still handled as changes to that task.
+- Task 26: `scripts/deploy.sh <bucket> [--dry-run] [--skip-build]` builds, then uploads in two passes: `_next/static/` first (one year, `immutable`, because the file names are hashed), then everything else with `Cache-Control: no-cache`. It never uploads or deletes `config.json` (Terraform owns it; the script only sets `no-cache` on it if it exists), leaves out `mockServiceWorker.js` and `config.example.json`, and refuses a build that contains the mock backend (the end-to-end build overwrites `out/`). It is tested against fake `aws` and `npm` commands, so the exact calls are checked, but it has **not been run against a real bucket**: no AWS credentials here. A real `aws` CLI did accept the call up to the credentials check.
+- Task 26: `--delete` is on for both passes, as the brief asks. A tab opened before a deploy may need a reload once its old chunk files are gone.
+- Task 26: the README covers the brief's list (what it does, running with mocks and against a lab, config.json, deploying, backend requirements including CORS and the S3 website settings, known limitations, backend requests) plus a troubleshooting section. `.nvmrc` (22) and `engines` (Node 20.9 or newer) pin the Node version.
+- Task 25: the end-to-end tests run in real Chromium against a production build with the mock backend compiled in (`npm run build:e2e`: scans finish in ~2 seconds, no random failures), served by a small S3-like static server (`tests/e2e/serve.mjs`). So they exercise the real static export, the service worker and the Content Security Policy. 18 tests: the six from the brief (login, code scan, app scan, failed scan and re-run, expired token, filters and search) plus logging out, the 404 page, a session running out by itself, paging, the details drawer, CSV export, the tabs, history and dashboard, and security checks.
+- Task 25: **this was the first time the app ran in a real browser.** Everything passed once the test selectors were right (they were too loose: Next keeps its own hidden `role="alert"` element). The CSP did not break the site, a request to another origin and a foreign iframe are both blocked by the browser, the login token is only in sessionStorage, and the S3 upload carries no Authorization header while every API call does.
+- Task 25: every end-to-end test also fails on a CSP violation or an uncaught page error, so a visible pass can't hide a broken console.
+- Task 25: the expired-token test works two ways: the server refuses the token (401 on the next request), and the clock runs out while you are on a page. Both end on `/login/?reason=expired` with the message.
+- Task 25: `npm run build:e2e` overwrites `out/` (the same folder `npm run build` fills). Build again before deploying.
+- Task 24: every unit and component test the brief lists in section 12 already existed, written with its task. This task mapped each one to its test file (`tests/README.md`), measured coverage, and filled the real gaps. Coverage went from 91% to 98.7% of statements (94.4% of branches). New tests cover: loading `config.json` and each way it can fail, the config provider (loader, error screen, Try again), the dark-mode toggle (system default, saved choice, following the OS), the mock-mode gate, the URL-state hook, the mock's settings, tokens, reload persistence and 400 errors.
+- Task 24: added `@vitest/coverage-v8` as a dev-only dependency (`npm run test:coverage`), and deleted `PagePlaceholder`, which nothing used any more.
+- Task 24: remaining uncovered lines are a handful of defensive branches (for example an impossible `new URL` failure in the redirect check).
+- Task 23: the CSP is two `<meta>` policies, because the browser applies every policy it is given and a static page cannot know the API address. (1) A fixed one in every page's `<head>` (scripts and styles from this site only, no plugins or frames, forms only to this site). (2) Once `config.json` is loaded, a second one is added that limits requests to this site, the configured API origin and `https://*.amazonaws.com` (the S3 upload bucket's name isn't known up front). Both are only added in production builds, because the dev server needs connections a strict policy would block.
+- Task 23: limits of a meta-tag CSP (to be written up in the README, Task 26): it cannot set `frame-ancestors`, `report-uri` or `sandbox`; it only protects what loads after the browser reads it, so the first request for `config.json` happens before the second policy; scripts need `'unsafe-inline'` because a static Next.js page carries its start-up data in inline scripts; and the upload allowance is the whole of `amazonaws.com` over https. The built JavaScript contains no `eval` or `new Function`, so the policy doesn't need `'unsafe-eval'`.
+- Task 23: colour contrast is now measured, not assumed. A test converts the theme colours and the Tailwind colours used by the badges and notices to real contrast ratios and fails below WCAG AA (4.5 to 1 for text, 3 to 1 for control edges and focus rings). It found four problems that are fixed in the theme: hint text on a muted background (4.33), input borders (1.2 in light mode, 1.5 in dark), and the light focus ring (2.2). All badge, banner and notice colours already passed. Input borders and the focus ring are now noticeably darker than shadcn's defaults.
+- Task 23: also fixed: the login page had no `<h1>` (the card title was a `div`), the 404 page was Next's default text, and "reduce motion" was only honoured by some animations. A global rule now covers all of them, including the shadcn components. A global visible focus outline covers anything without its own focus style.
+- Task 23: not done: no automated axe-core run (it would be a new dev dependency; say if you want it), and no test with a real screen reader. Each relative time is a keyboard stop for its tooltip, so tables have many tab stops.
+- Task 22: with no "all scans" endpoint (still listed under Backend requests), the dashboard asks for the newest 20 scans of each recent project (up to 10 projects, from this tab's list) and combines them. It waits until every project has answered, keeps going when some fail (with a "numbers are incomplete" note and Try again), and shows an error only when none could be loaded. Because it only asks for 20 scans per project, a very busy project can make "last 7 days" an undercount.
+- Task 22: the cards are Scans in the last 7 days (by creation time), Running now, Failed in the last 7 days (by finish time), and New HIGH findings added up over the 10 most recent finished scans. New HIGH is red and says "Needs attention" when above 0. The recent scans table is the shared scans table with a Project column.
+- Task 22: a first-time user (no recent projects) sees a short explanation of code scans and app scans and a "Start your first scan" button, and nothing is loaded. Scans from a project show up after it has been used or opened in this tab. The temporary component preview from Task 10 is gone from this page.
+- Task 21: the details drawer opens from the rule ID button in each row (so the keyboard can reach it) and from a click anywhere else on a row or card. It shows severity, state, rule ID, location, the full message, the fingerprint with a copy button, and links to the first and last scan that saw the finding. If a refresh removes the finding that is open, the drawer closes.
+- Task 21: "Export CSV" saves every finding that matches the current filters, in the order shown (not only the page on screen), generated in the browser. The file starts with a byte order mark so Excel reads accents correctly, and uses CRLF line endings.
+- Task 21: CSV safety: besides quoting commas, quotes and line breaks, any cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`. Finding text comes from scanned code and attacked apps, and a spreadsheet would otherwise run it as a formula. The cost is that such a cell shows an extra apostrophe.
+- Task 20: the project page keeps everything in the address: `projectId`, `scanType` (which findings tab, as the "View findings" link from Task 17 expects), `tab=history`, `severity` (comma list), `state` (open is the default and leaves no trace), `q`, `sort` and `page`. Any filter or sort change goes back to page 1, and switching tab drops the other tab's settings.
+- Task 20: the severity counts at the top are also the severity filter: press one or more to show only those. The numbers follow the state and search filters (but not the severity choice), so each says how many you would get by pressing it.
+- Task 20: search is a plain, case-insensitive text match on rule ID, location and message (no pattern syntax, so characters like `*` and `(` are just text), and waits 300 ms after the last key before it rewrites the address.
+- Task 20: sorting is high severity first by default, then by location (numbers sort naturally, so `a.py:2` comes before `a.py:10`), with a fixed tie-break so rows never shuffle. Other orders: low first, location, rule ID.
+- Task 20: paging is on the client, 50 per page, and a page number that is too big shows the last page.
+- Task 20: the Scan history tab reuses the scans list from Task 18 (now with an option to hide its project picker). The mock project `many-findings` returns 120 made-up findings so paging and "Show more" can be tried by hand.
+- Task 20: clicking a row does nothing yet. The details drawer is Task 21.
 - Task 19: the projects page has no "all projects" list to show, because the API has none. It offers an input to open any project by ID, plus the recent projects of this tab with a search box and links to each project and its scans. A project opened from here is added to the recent list.
 - Task 19: a test caught a screen reader bug: "View scans" followed by hidden "for demo-app" was read as "View scansfor demo-app" because the space was lost. The space is now explicit.
 - Task 18: the scans page keeps its settings in the address (`projectId`, `scanType`, `status`, `sort`), so a link or a reload brings back the same view. The project param is `projectId` like the other pages.
@@ -130,5 +160,15 @@ Progress: 17 / 26 approved (65%) · built and awaiting your review: 18, 19
 
 ## Backend requests
 
-- (Likely) `GET /scans?limit=&cursor=` returning recent scans across all projects, for the dashboard. Will confirm in Task 22.
-- Please confirm `imageTag` can be null/absent on CREATED/QUEUED jobs, and that `expiresIn` in the upload block is in seconds.
+The same list is in the README, with the reasons.
+
+1. An "all scans" call, for example `GET /scans?limit=&cursor=`, so the dashboard is complete instead of built from recent projects.
+2. Confirm `imageTag` can be `null` or missing on a scan that has not started.
+3. Confirm `upload.expiresIn` is in seconds, counted from when `POST /scans` answers.
+4. Findings have no paging: tell us if a project can have thousands.
+5. The default and maximum `limit` for scan history (the site sends 20).
+6. Enforce the 50 MB limit, and check that the upload really is a zip, on the backend too.
+7. What `POST /scans/{id}/start` answers for a scan that was already started (the fake backend answers 409).
+8. Scan history and findings of an unknown project should be an empty list, not a 404.
+9. Terraform writes `config.json` with `Cache-Control: no-cache`.
+10. CORS on API Gateway (GET, POST, OPTIONS; Authorization and Content-Type) and on the upload bucket (PUT; content-type).

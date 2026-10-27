@@ -15,7 +15,13 @@ const LONG_MESSAGE = 140;
 // untrusted. They are only ever shown as plain text.
 
 /** The findings as a table on wide screens, and as stacked cards on phones. */
-export function FindingsTable({ findings }: { findings: Finding[] }) {
+export function FindingsTable({
+  findings,
+  onSelect,
+}: {
+  findings: Finding[];
+  onSelect: (finding: Finding) => void;
+}) {
   return (
     <>
       <div className="border-border hidden overflow-x-auto rounded-xl border md:block">
@@ -32,12 +38,19 @@ export function FindingsTable({ findings }: { findings: Finding[] }) {
           </thead>
           <tbody className="divide-border divide-y">
             {findings.map((finding) => (
-              <tr key={finding.fingerprint} className="align-top">
+              <tr
+                key={finding.fingerprint}
+                className="hover:bg-muted/40 cursor-pointer align-top"
+                onClick={(event) => {
+                  // A link or button does its own thing. Anywhere else on the row opens the details.
+                  if (!(event.target as HTMLElement).closest('a, button')) onSelect(finding);
+                }}
+              >
                 <td className="px-4 py-3">
                   <SeverityBadge severity={finding.severity} />
                 </td>
                 <td className="px-4 py-3">
-                  <code className="font-mono text-xs break-all">{finding.ruleId}</code>
+                  <RuleButton finding={finding} onSelect={onSelect} />
                 </td>
                 <td className="px-4 py-3">
                   <code className="font-mono text-xs break-all">{finding.location}</code>
@@ -70,7 +83,7 @@ export function FindingsTable({ findings }: { findings: Finding[] }) {
               <SeverityBadge severity={finding.severity} />
               <FindingStateBadge state={finding.state} />
             </div>
-            <code className="block font-mono text-xs break-all">{finding.ruleId}</code>
+            <RuleButton finding={finding} onSelect={onSelect} />
             <code className="text-muted-foreground block font-mono text-xs break-all">
               {finding.location}
             </code>
@@ -93,6 +106,26 @@ export function FindingsTable({ findings }: { findings: Finding[] }) {
         ))}
       </ul>
     </>
+  );
+}
+
+/** The rule ID is the button that opens the details, so the keyboard can reach them too. */
+function RuleButton({
+  finding,
+  onSelect,
+}: {
+  finding: Finding;
+  onSelect: (finding: Finding) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-haspopup="dialog"
+      onClick={() => onSelect(finding)}
+      className="text-primary focus-visible:ring-ring rounded text-left font-mono text-xs break-all underline-offset-4 outline-none hover:underline focus-visible:ring-2"
+    >
+      {finding.ruleId}
+    </button>
   );
 }
 

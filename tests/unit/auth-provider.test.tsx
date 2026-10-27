@@ -159,6 +159,26 @@ describe('AuthProvider', () => {
     expect(replace).toHaveBeenCalledWith('/login/?reason=signed-out');
   });
 
+  it('remembers why the user was logged out, until they log in again', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => loginResponse(3600)),
+    );
+    renderAuth();
+    expect(auth.logoutReason).toBeNull();
+
+    await act(async () => {
+      await auth.login('demo', 'demo123');
+    });
+    act(() => auth.logout('expired'));
+    expect(auth.logoutReason).toBe('expired');
+
+    await act(async () => {
+      await auth.login('demo', 'demo123');
+    });
+    expect(auth.logoutReason).toBeNull();
+  });
+
   it('logs out automatically when the token expires', async () => {
     vi.stubGlobal(
       'fetch',

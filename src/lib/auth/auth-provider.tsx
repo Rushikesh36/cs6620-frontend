@@ -28,6 +28,11 @@ export type AuthContextValue = {
   expiresAt: number | null;
   /** True during the last 5 minutes of the session. */
   isExpiringSoon: boolean;
+  /**
+   * Set once a logout has started, and already sends the user to the login page. The route guard
+   * uses it to avoid sending them there a second time (which would drop the reason message).
+   */
+  logoutReason: LogoutReason | null;
   /** Throws an ApiError when the login fails (a 401 means wrong username or password). */
   login: (username: string, password: string) => Promise<User>;
   logout: (reason?: LogoutReason) => void;
@@ -52,6 +57,7 @@ export function AuthProvider({
   const [expiringSoon, setExpiringSoon] = useState(() =>
     session ? isExpiringSoon(session.expiresAt) : false,
   );
+  const [logoutReason, setLogoutReason] = useState<LogoutReason | null>(null);
 
   const onLogoutRef = useRef(onLogout);
   useEffect(() => {
@@ -63,6 +69,7 @@ export function AuthProvider({
       clearSession();
       setSession(null);
       setExpiringSoon(false);
+      setLogoutReason(reason);
       onLogoutRef.current?.();
       router.replace(`/login/?reason=${reason}`);
     },
@@ -89,6 +96,7 @@ export function AuthProvider({
       writeSession(next);
       setSession(next);
       setExpiringSoon(isExpiringSoon(next.expiresAt));
+      setLogoutReason(null);
       return next.user;
     },
     [loginEndpoint],
@@ -126,10 +134,11 @@ export function AuthProvider({
       isAuthenticated: session !== null,
       expiresAt,
       isExpiringSoon: expiringSoon,
+      logoutReason,
       login,
       logout,
     }),
-    [session, expiresAt, expiringSoon, login, logout],
+    [session, expiresAt, expiringSoon, logoutReason, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

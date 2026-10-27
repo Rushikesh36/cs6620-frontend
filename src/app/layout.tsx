@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { SessionExpiryBanner } from '@/components/auth/session-expiry-banner';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AuthProvider } from '@/lib/auth/auth-provider';
 import { ConfigProvider } from '@/lib/config-provider';
@@ -27,10 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ConfigProvider>
             <MockGate>
-              <AuthProvider>
-                <SessionExpiryBanner />
-                {children}
-              </AuthProvider>
+              <AuthProvider>{children}</AuthProvider>
             </MockGate>
           </ConfigProvider>
         </ThemeProvider>

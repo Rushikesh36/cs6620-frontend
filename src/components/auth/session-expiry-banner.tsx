@@ -17,7 +17,7 @@ export function SessionExpiryBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-3 border-b border-amber-300 bg-amber-100 px-4 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+      className="flex w-full items-center justify-center gap-3 border-b border-amber-300 bg-amber-100 px-4 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
     >
       <Clock className="size-4 shrink-0" aria-hidden />
       <span>Your session expires in 5 minutes.</span>

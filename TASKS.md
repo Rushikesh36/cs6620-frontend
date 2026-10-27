@@ -1,7 +1,7 @@
 # Tasks
 
-Progress: 7 / 26 done (27%)
-[###########.............................]
+Progress: 8 / 26 done (31%)
+[############............................]
 
 | #   | Task                                                                                                             | Status         | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
@@ -12,8 +12,8 @@ Progress: 7 / 26 done (27%)
 | 5   | API client (fetch wrapper, ApiError, timeout, auth header) and endpoints, with unit tests                        | ✅ Approved    | 3, 4       |
 | 6   | MSW mock backend: login, targets, create/start scan, job lifecycle, findings, error flags                        | ✅ Approved    | 4          |
 | 7   | Auth: AuthProvider, sessionStorage, token expiry, expiry banner, logout                                          | ✅ Approved    | 3, 5       |
-| 8   | Login page with form validation and error states                                                                 | 🔍 In review   | 6, 7       |
-| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | ⬜ Not started | 7, 8       |
+| 8   | Login page with form validation and error states                                                                 | ✅ Approved    | 6, 7       |
+| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | 🔍 In review   | 7, 8       |
 | 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | ⬜ Not started | 2          |
 | 11  | TanStack Query setup, query keys, resource hooks                                                                 | ⬜ Not started | 5, 7       |
 | 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ⬜ Not started | 9, 10      |
@@ -37,6 +37,11 @@ Progress: 7 / 26 done (27%)
 - Plan v1: tests for schemas/client are written inside Tasks 4-5 (not deferred to 24) so each task is verifiable alone. Task 24 fills the remaining gaps.
 - Plan v1: query-param routes (`/scans/detail?jobId=`) instead of dynamic segments, because of static export.
 - Task 1 (revised): package manager is npm, not pnpm, per reviewer request. Lockfile is package-lock.json.
+- Task 9: six placeholder pages (`dashboard`, `scans`, `scans/new`, `scans/detail`, `projects`, `projects/detail`) say "This page is built in Task N". They exist only so the guard, the sidebar and the mobile menu can be tried now; each is replaced by its own task (22, 18, 12, 16, 19, 20).
+- Task 9: `AuthProvider` (approved in Task 7) gained `logoutReason`. Without it the guard and the logout both redirect to `/login`, and the guard's redirect wins and drops the "session expired" message.
+- Task 9: the expiry banner moved from the root layout into the app shell and sits in the page flow above the header instead of covering it.
+- Task 9: the shell fills the window and only the content area scrolls, so the header and sidebar never move.
+- Task 9: the route guard only controls what the browser shows. The API refusing requests without a valid token is the real protection. In the prerendered HTML of a protected page, the visible part is only a loader, but Next also embeds the page's structure in a payload script (checked). On a static site that is expected, and all of it is public anyway. So protected pages must never hold data or secrets in their source: everything private comes from the API, after login.
 - Task 8: `@hookform/resolvers` pinned to v5. Version 6 has an optional peer on `effect@4`, which clashes with the `effect@3` that shadcn's tooling already installs, and I didn't want to force the install.
 - Task 8: the "You have been logged out." message is shown on the login page itself. The brief asks for a toast; the toast library arrives with the shared components (Task 10), and I'll move it there then.
 - Task 8: `?next=` goes through `safeRedirectPath`, which parses it as a URL and rejects anything that isn't on this site (other hosts, `//host`, backslashes, tabs and newlines that browsers strip, `javascript:`). The default destination is `/dashboard/`, which doesn't exist until Task 22.

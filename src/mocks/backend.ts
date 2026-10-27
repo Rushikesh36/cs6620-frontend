@@ -244,6 +244,7 @@ export class MockBackend {
   }
 
   getFindings(projectId: string, scanType: ScanType): Finding[] {
+    if (projectId === 'many-findings') return syntheticFindings(scanType);
     this.settle();
     const pool = FINDING_POOLS[scanType];
     return (this.findings.get(keyOf(projectId, scanType)) ?? []).flatMap((stored) => {
@@ -452,6 +453,27 @@ export class MockBackend {
       return false;
     }
   }
+}
+
+/** 120 made-up findings, for trying out paging and long messages by hand (project "many-findings"). */
+function syntheticFindings(scanType: ScanType): Finding[] {
+  const severities = ['HIGH', 'MEDIUM', 'LOW', 'INFO', 'MEDIUM', 'LOW'] as const;
+  return Array.from({ length: 120 }, (_, i) => ({
+    fingerprint: fakeSha256(`many-findings|${scanType}|${i}`),
+    ruleId: `${scanType === 'SAST' ? 'demo.code' : 'zap.demo'}.rule-${i % 12}`,
+    severity: severities[i % severities.length] ?? 'LOW',
+    location:
+      scanType === 'SAST'
+        ? `src/module${i % 15}/file${i}.py:${i + 1}`
+        : `GET /api/items/${i}?filter`,
+    message:
+      i % 7 === 0
+        ? `Finding number ${i + 1}. This message is deliberately long, so you can try the "Show more" button: it repeats itself to go over the limit, and it repeats itself to go over the limit again.`
+        : `Finding number ${i + 1}.`,
+    state: i % 4 === 3 ? ('FIXED' as const) : ('OPEN' as const),
+    firstSeenJobId: 'demo-job-1',
+    lastSeenJobId: 'demo-job-2',
+  }));
 }
 
 function safeAtob(value: string): string | null {

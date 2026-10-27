@@ -1,7 +1,7 @@
 # Tasks
 
-Progress: 16 / 26 done (62%)
-[#########################...............]
+Progress: 17 / 26 approved (65%) · built and awaiting your review: 18, 19
+[##########################..............]
 
 | #   | Task                                                                                                             | Status         | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
@@ -21,10 +21,10 @@ Progress: 16 / 26 done (62%)
 | 14  | New scan page, part 3: DAST target selection from the allow-list                                                 | ✅ Approved    | 11, 12     |
 | 15  | New scan page, part 4: review step, submit flow, XHR upload with progress, retry, beforeunload                   | ✅ Approved    | 13, 14     |
 | 16  | Scan detail page: header, status timeline, polling with backoff and tab visibility                               | ✅ Approved    | 10, 11     |
-| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | 🔨 In progress | 15, 16     |
-| 18  | Scans list page with filters, load more, auto-refresh                                                            | ⬜ Not started | 10, 11     |
-| 19  | Projects list page                                                                                               | ⬜ Not started | 10, 12     |
-| 20  | Project detail page: findings table, filters, search, sort, URL state, pagination                                | ⬜ Not started | 11, 18     |
+| 17  | Scan detail page: completed summary, failed state, "start the same scan again", long-running warning             | ✅ Approved    | 15, 16     |
+| 18  | Scans list page with filters, load more, auto-refresh                                                            | 🔍 In review   | 10, 11     |
+| 19  | Projects list page                                                                                               | 🔍 In review   | 10, 12     |
+| 20  | Project detail page: findings table, filters, search, sort, URL state, pagination                                | 🔨 In progress | 11, 18     |
 | 21  | Finding detail drawer and CSV export                                                                             | ⬜ Not started | 20         |
 | 22  | Dashboard page: summary cards, recent scans, empty state                                                         | ⬜ Not started | 18         |
 | 23  | 404 page, CSP meta tag, accessibility pass (keyboard, focus, aria-live, contrast)                                | ⬜ Not started | 1-22       |
@@ -37,6 +37,20 @@ Progress: 16 / 26 done (62%)
 - Plan v1: tests for schemas/client are written inside Tasks 4-5 (not deferred to 24) so each task is verifiable alone. Task 24 fills the remaining gaps.
 - Plan v1: query-param routes (`/scans/detail?jobId=`) instead of dynamic segments, because of static export.
 - Task 1 (revised): package manager is npm, not pnpm, per reviewer request. Lockfile is package-lock.json.
+- Workflow change (after Task 17, at the user's request): the next task now starts right after the previous one is built and checked, without waiting for "approved". Finished-but-unreviewed tasks stay "🔍 In review" and are not counted as approved. Review comments on any of them are still handled as changes to that task.
+- Task 19: the projects page has no "all projects" list to show, because the API has none. It offers an input to open any project by ID, plus the recent projects of this tab with a search box and links to each project and its scans. A project opened from here is added to the recent list.
+- Task 19: a test caught a screen reader bug: "View scans" followed by hidden "for demo-app" was read as "View scansfor demo-app" because the space was lost. The space is now explicit.
+- Task 18: the scans page keeps its settings in the address (`projectId`, `scanType`, `status`, `sort`), so a link or a reload brings back the same view. The project param is `projectId` like the other pages.
+- Task 18: filters and sorting work on the scans loaded so far, because the API only offers a limit and a cursor. When nothing loaded matches and there is another page, the page says to load more.
+- Task 18: a project is added to the recent list only once it has at least one scan, so a typo isn't remembered.
+- Task 18: the table is a real `<table>` on wide screens and a separate list of cards on phones (two layouts, not one table bent with CSS, which can break screen reader table support). A click anywhere on a row opens the scan, and the link in the first cell does the same for keyboard users.
+- Task 18: auto-refresh is every 15 seconds, only while a scan you can see is unfinished, and not while the tab is hidden. `useProjectScans` now takes `autoRefreshWhile` instead of a fixed interval.
+- Task 17: "View findings" links to `/projects/detail/?projectId=<id>&scanType=SAST|DAST`. **Task 20's project page must read `scanType` from the link** to open the matching findings tab.
+- Task 17: "Start the same scan again" links to `/scans/new/?type=…&project=…&target=…` (target only for app scans). It can't pre-fill the zip file, so a code scan shows "You will need to choose your .zip file again."
+- Task 17: the failed-scan box says what happened in plain words for the four failures in section 4.9 and a general sentence for anything else, and always shows the scanner's own message underneath.
+- Task 17: the "taking longer than usual" warning counts from when the scan was queued (10 minutes) or started running (25 minutes), not from when it was created. It is a soft warning only: the page never gives up, because the backend fails a stuck scan by itself.
+- Task 17: New HIGH is red when above 0, and also says "Needs attention", so colour is not the only signal.
+- Task 17: mock project `stuck-demo` now pretends it was queued 26 minutes ago, so the slow-scan warning shows straight away instead of after a 25-minute wait. This changed approved Task 6 mock code.
 - Task 16: the scan detail page polls one thing, `GET /scans/{jobId}`, every 5 seconds until COMPLETED or FAILED. It pauses while the tab is hidden and asks again the moment the tab is shown.
 - Task 16: after failed polls the wait doubles (5s, 10s, 20s, 40s, then 60s at most) and one good answer resets it. The last good scan stays on screen with "Reconnecting...". TanStack's own failure counters reset on every fetch, so consecutive failures are counted in `useScan`.
 - Task 16: a failed poll is not retried on top of the back-off, but the very first load is retried twice. A 404 on the first load shows "Scan not found" with a link back to the scans list.

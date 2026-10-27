@@ -219,6 +219,25 @@ describe('mock special cases', () => {
     expect((await api.getScan(created.jobId)).status).toBe('RUNNING');
   });
 
+  it('makes stuck-demo look 26 minutes old, so the slow-scan warning can be seen at once', async () => {
+    useBackend({ tokenMinutes: 600 });
+    await loginAs();
+    const created = await api.createScan({
+      projectId: 'stuck-demo',
+      scanType: 'DAST',
+      targetId: 'juice-shop',
+    });
+    await api.startScan(created.jobId);
+    advance(6_000);
+
+    const scan = await api.getScan(created.jobId);
+
+    expect(scan.status).toBe('RUNNING');
+    const minutesRunning = (clock - Date.parse(scan.startedAt ?? '')) / 60_000;
+    expect(minutesRunning).toBeGreaterThan(25);
+    expect(Date.parse(scan.createdAt)).toBeLessThan(Date.parse(scan.queuedAt ?? ''));
+  });
+
   it('always fails fail-demo with a realistic error', async () => {
     useBackend();
     await loginAs();

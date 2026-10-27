@@ -1,12 +1,13 @@
 import { focusManager } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useProjectScans } from '@/hooks/use-project-scans';
 import { useScan } from '@/hooks/use-scan';
 import { ApiError } from '@/lib/api/client';
 import { MAX_POLL_DELAY_MS, POLL_INTERVAL_MS, pollDelay } from '@/lib/utils/polling';
 import { createWrapper, scanFixture } from './support/query-wrapper';
 
-const { api } = vi.hoisted(() => ({ api: { getScan: vi.fn() } }));
+const { api } = vi.hoisted(() => ({ api: { getScan: vi.fn(), getProjectScans: vi.fn() } }));
 vi.mock('@/hooks/use-api', () => ({ useApi: () => api }));
 
 const running = scanFixture({ status: 'RUNNING' });
@@ -26,6 +27,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse('2026-03-01T12:00:00Z'));
   api.getScan.mockReset();
+  api.getProjectScans.mockReset();
 });
 afterEach(() => {
   focusManager.setFocused(undefined);
@@ -177,5 +179,55 @@ describe('scan polling when the network fails', () => {
     await advance(3000); // retry after 1s, then 2s
     expect(result.current.data?.jobId).toBe('job-1');
     expect(api.getScan).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('scan history auto-refresh', () => {
+  const page = (...statuses: string[]) => ({
+    items: statuses.map((status, i) => scanFixture({ jobId: `job-${i}`, status })),
+    nextCursor: null,
+  });
+  const setupHistory = (autoRefreshWhile?: Parameters<typeof useProjectScans>[1]) => {
+    const { Wrapper } = createWrapper();
+    return renderHook(() => useProjectScans('demo-app', autoRefreshWhile), { wrapper: Wrapper });
+  };
+
+  it('refreshes every 15 seconds while the predicate says a scan is unfinished', async () => {
+    api.getProjectScans.mockResolvedValue(page('RUNNING'));
+    setupHistory({ autoRefreshWhile: (scans) => scans.some((s) => s.status === 'RUNNING') });
+
+    await advance(0);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(1);
+    await advance(14_999);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(1);
+    await advance(1);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(2);
+    await advance(15_000);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(3);
+  });
+
+  it('stops refreshing once every scan is finished', async () => {
+    api.getProjectScans.mockResolvedValueOnce(page('RUNNING')).mockResolvedValue(page('COMPLETED'));
+    const { result } = setupHistory({
+      autoRefreshWhile: (scans) => scans.some((s) => s.status === 'RUNNING'),
+    });
+
+    await advance(0);
+    await advance(15_000);
+    await vi.waitFor(() =>
+      expect(result.current.data?.pages[0]?.items[0]?.status).toBe('COMPLETED'),
+    );
+    expect(api.getProjectScans).toHaveBeenCalledTimes(2);
+
+    await advance(10 * 60_000);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(2);
+  });
+
+  it('never refreshes by itself when it is not asked to', async () => {
+    api.getProjectScans.mockResolvedValue(page('RUNNING'));
+    setupHistory();
+
+    await advance(10 * 60_000);
+    expect(api.getProjectScans).toHaveBeenCalledTimes(1);
   });
 });

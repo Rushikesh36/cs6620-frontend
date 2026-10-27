@@ -92,9 +92,7 @@ export function ScanDetail() {
           {scan.summary ? (
             <SummaryCards summary={scan.summary} />
           ) : (
-            <p className="text-muted-foreground text-sm">
-              The summary isn't available for this scan.
-            </p>
+            <p className="text-muted-foreground text-sm">No summary is available for this scan.</p>
           )}
           <Button asChild>
             <Link href={findingsHref(scan)}>View findings</Link>

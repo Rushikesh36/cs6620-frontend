@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+.env*.local
+# Local dev config: each lab account has its own API URL.
+public/config.json
+# Playwright / test output
+test-results
+playwright-report
+coverage

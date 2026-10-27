@@ -1,0 +1,4 @@
+{
+  "apiBaseUrl": "https://abc123.execute-api.us-east-1.amazonaws.com",
+  "environment": "local-dev"
+}

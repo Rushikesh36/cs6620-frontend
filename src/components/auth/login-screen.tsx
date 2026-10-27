@@ -3,16 +3,15 @@
 import { Info, ShieldCheck } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { FullPageLoader } from '@/components/common/full-page-loader';
 import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { safeRedirectPath } from '@/lib/auth/redirect';
 
-const REASON_MESSAGES: Record<string, string> = {
-  expired: 'Your session expired, please log in again.',
-  'signed-out': 'You have been logged out.',
-};
+// An expired session stays on the page so it can't be missed. A manual logout is a toast.
+const EXPIRED_MESSAGE = 'Your session expired, please log in again.';
 
 export function LoginScreen() {
   const { isAuthenticated } = useAuth();
@@ -20,7 +19,13 @@ export function LoginScreen() {
   const params = useSearchParams();
   const destination = safeRedirectPath(params.get('next'));
   const reason = params.get('reason');
-  const notice = reason ? REASON_MESSAGES[reason] : undefined;
+  const notice = reason === 'expired' ? EXPIRED_MESSAGE : undefined;
+  const signedOut = reason === 'signed-out';
+
+  useEffect(() => {
+    // The id stops React Strict Mode (which runs effects twice in development) from showing it twice.
+    if (signedOut) toast('You have been logged out.', { id: 'signed-out' });
+  }, [signedOut]);
 
   // Also runs right after a successful login, since that makes isAuthenticated true.
   useEffect(() => {

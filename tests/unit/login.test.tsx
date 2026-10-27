@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 import { LoginScreen } from '@/components/auth/login-screen';
 import { ApiError } from '@/lib/api/client';
 
@@ -14,6 +15,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(query.current),
 }));
 vi.mock('@/lib/auth/auth-provider', () => ({ useAuth: () => auth }));
+vi.mock('sonner', () => ({ toast: vi.fn() }));
 
 async function fillAndSubmit(
   user: ReturnType<typeof userEvent.setup>,
@@ -27,6 +29,7 @@ async function fillAndSubmit(
 
 beforeEach(() => {
   replace.mockClear();
+  vi.mocked(toast).mockClear();
   auth.isAuthenticated = false;
   auth.login.mockReset();
   auth.login.mockResolvedValue({ username: 'demo', role: 'user' });
@@ -160,15 +163,18 @@ describe('LoginScreen', () => {
     expect(screen.getByText('Your session expired, please log in again.')).toBeInTheDocument();
   });
 
-  it('confirms a manual logout, and ignores unknown reasons', () => {
+  it('confirms a manual logout with a toast, not a banner', () => {
     query.current = 'reason=signed-out';
-    const { unmount } = render(<LoginScreen />);
-    expect(screen.getByText('You have been logged out.')).toBeInTheDocument();
-    unmount();
+    render(<LoginScreen />);
+    expect(toast).toHaveBeenCalledWith('You have been logged out.', { id: 'signed-out' });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
 
+  it('ignores unknown reasons', () => {
     query.current = 'reason=<script>alert(1)</script>';
     render(<LoginScreen />);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(toast).not.toHaveBeenCalled();
   });
 });
 

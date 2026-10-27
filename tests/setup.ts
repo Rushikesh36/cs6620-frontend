@@ -4,3 +4,10 @@ import { afterEach } from 'vitest';
 
 // Vitest globals are off, so Testing Library can't register its own cleanup.
 afterEach(cleanup);
+
+// jsdom has no ResizeObserver, which Radix tooltips and popovers rely on.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

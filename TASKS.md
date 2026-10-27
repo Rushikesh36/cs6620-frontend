@@ -1,7 +1,7 @@
 # Tasks
 
-Progress: 8 / 26 done (31%)
-[############............................]
+Progress: 9 / 26 done (35%)
+[##############..........................]
 
 | #   | Task                                                                                                             | Status         | Depends on |
 | --- | ---------------------------------------------------------------------------------------------------------------- | -------------- | ---------- |
@@ -13,8 +13,8 @@ Progress: 8 / 26 done (31%)
 | 6   | MSW mock backend: login, targets, create/start scan, job lifecycle, findings, error flags                        | ✅ Approved    | 4          |
 | 7   | Auth: AuthProvider, sessionStorage, token expiry, expiry banner, logout                                          | ✅ Approved    | 3, 5       |
 | 8   | Login page with form validation and error states                                                                 | ✅ Approved    | 6, 7       |
-| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | 🔍 In review   | 7, 8       |
-| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | ⬜ Not started | 2          |
+| 9   | Route guard and authenticated app shell (header, sidebar, mobile nav, environment badge)                         | ✅ Approved    | 7, 8       |
+| 10  | Shared components: status badge, severity badge, relative time, copy button, empty state, error state, skeletons | 🔍 In review   | 2          |
 | 11  | TanStack Query setup, query keys, resource hooks                                                                 | ⬜ Not started | 5, 7       |
 | 12  | New scan page, part 1: scan type step, project ID step, recent projects                                          | ⬜ Not started | 9, 10      |
 | 13  | New scan page, part 2: zip upload zone with validation                                                           | ⬜ Not started | 12         |
@@ -37,6 +37,12 @@ Progress: 8 / 26 done (31%)
 - Plan v1: tests for schemas/client are written inside Tasks 4-5 (not deferred to 24) so each task is verifiable alone. Task 24 fills the remaining gaps.
 - Plan v1: query-param routes (`/scans/detail?jobId=`) instead of dynamic segments, because of static export.
 - Task 1 (revised): package manager is npm, not pnpm, per reviewer request. Lockfile is package-lock.json.
+- Task 10: toasts use `sonner` with our own small wrapper (`ui/toaster.tsx`). shadcn's version needs `next-themes`, and we already have a theme provider. The "You have been logged out." notice from Task 8 is now a toast, as planned.
+- Task 10: status and severity colours live in the two badge files, as fixed colours separate from the accent, so a future accent change can't turn "Failed" or "High" a different colour. Labels are Title case (Running, High) and always shown next to the colour.
+- Task 10: `RelativeTime` is keyboard-focusable so its tooltip (full local date and time) works without a mouse. It re-reads the clock every 30 seconds so "3 minutes ago" keeps moving.
+- Task 10: the copy button uses `navigator.clipboard` when the page has it and a hidden text box otherwise (plain HTTP has no Clipboard API). A failure shows an error toast instead of failing silently.
+- Task 10: only generic skeletons (`TableSkeleton`, `CardGridSkeleton`) are built here. Each page task shapes its own loading state from them once its layout exists.
+- Task 10: the Dashboard placeholder temporarily hosts a component preview. Task 22 replaces that page.
 - Task 9: six placeholder pages (`dashboard`, `scans`, `scans/new`, `scans/detail`, `projects`, `projects/detail`) say "This page is built in Task N". They exist only so the guard, the sidebar and the mobile menu can be tried now; each is replaced by its own task (22, 18, 12, 16, 19, 20).
 - Task 9: `AuthProvider` (approved in Task 7) gained `logoutReason`. Without it the guard and the logout both redirect to `/login`, and the guard's redirect wins and drops the "session expired" message.
 - Task 9: the expiry banner moved from the root layout into the app shell and sits in the page flow above the header instead of covering it.

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { ThemeProvider } from '@/components/theme/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/lib/auth/auth-provider';
 import { ConfigProvider } from '@/lib/config-provider';
 import { MockGate } from '@/lib/mock-gate';
@@ -24,11 +26,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {THEME_INIT}
         </Script>
         <ThemeProvider>
-          <ConfigProvider>
-            <MockGate>
-              <AuthProvider>{children}</AuthProvider>
-            </MockGate>
-          </ConfigProvider>
+          <TooltipProvider>
+            <ConfigProvider>
+              <MockGate>
+                <AuthProvider>{children}</AuthProvider>
+              </MockGate>
+            </ConfigProvider>
+            <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

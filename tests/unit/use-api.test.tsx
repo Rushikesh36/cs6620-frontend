@@ -12,6 +12,8 @@ vi.mock('@/lib/config-provider', () => ({
 
 const ok = () => new Response(JSON.stringify({ targets: [] }), { status: 200 });
 const unauthorized = () => new Response(JSON.stringify({ error: 'expired' }), { status: 401 });
+// What API Gateway sends for a bad or expired token.
+const forbidden = () => new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
 
 beforeEach(() => {
   auth.token = 'tok-123';
@@ -32,22 +34,42 @@ describe('useApi', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok-123');
   });
 
-  it('logs out as "expired" on a 401', async () => {
+  it.each([
+    [401, unauthorized],
+    [403, forbidden],
+  ])('logs out as "expired" on a %i', async (status, answer) => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => unauthorized()),
+      vi.fn(async () => answer()),
     );
     const { result } = renderHook(() => useApi());
 
-    await expect(result.current.getTargets()).rejects.toMatchObject({ status: 401 });
+    await expect(result.current.getTargets()).rejects.toMatchObject({ status });
 
     expect(auth.logout).toHaveBeenCalledWith('expired');
   });
 
-  it('logs out only once when several requests fail with 401 together', async () => {
+  it('does not log out when the login request is refused', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => unauthorized()),
+      vi.fn(async () => forbidden()),
+    );
+    const { result } = renderHook(() => useApi());
+
+    await expect(result.current.login({ username: 'a', password: 'b' })).rejects.toMatchObject({
+      status: 403,
+    });
+
+    expect(auth.logout).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['401', unauthorized],
+    ['403', forbidden],
+  ])('logs out only once when several requests fail with %s together', async (_name, answer) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => answer()),
     );
     const { result } = renderHook(() => useApi());
 

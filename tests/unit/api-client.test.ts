@@ -108,6 +108,32 @@ describe('createApiClient', () => {
     expect(error.message).toBe('Token expired');
   });
 
+  it('on 403 from a protected endpoint (API Gateway for a bad or expired token), logs out', async () => {
+    const { client, onUnauthorized } = setup(async () =>
+      jsonResponse({ message: 'Forbidden' }, 403),
+    );
+
+    const error = await rejectionOf(client.request({ path: '/scans/1', schema: okSchema }));
+
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+    expect(error.status).toBe(403);
+    expect(error.kind).toBe('http');
+    expect(error.message).toBe('Your session expired, please log in again.');
+  });
+
+  it('on 403 from /login (auth: false), does not trigger logout', async () => {
+    const { client, onUnauthorized } = setup(async () =>
+      jsonResponse({ message: 'Forbidden' }, 403),
+    );
+
+    const error = await rejectionOf(
+      client.request({ path: '/login', schema: okSchema, auth: false }),
+    );
+
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ status: 403, message: "You don't have permission to do this." });
+  });
+
   it('on 401 from /login (auth: false), does not trigger logout', async () => {
     const { client, onUnauthorized } = setup(async () =>
       jsonResponse({ error: 'Bad credentials' }, 401),
@@ -130,7 +156,6 @@ describe('createApiClient', () => {
   });
 
   it.each([
-    [403, "You don't have permission to do this."],
     [404, "We couldn't find that."],
     [500, 'Something went wrong on our side. Please try again.'],
     [418, 'The request could not be completed.'],

@@ -13,7 +13,7 @@ Tests live in `tests/unit/`, one file per piece of the app, with shared helpers 
 | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Zod schemas accept valid responses and reject invalid ones           | `schemas.test.ts`, `config.test.ts`                                  |
 | API client: auth header added                                        | `api-client.test.ts`, `use-api.test.tsx`                             |
-| API client: a 401 triggers logout                                    | `api-client.test.ts`, `use-api.test.tsx`, `auth-provider.test.tsx`   |
+| API client: a 401 or 403 triggers logout                             | `api-client.test.ts`, `use-api.test.tsx`, `auth-provider.test.tsx`   |
 | API client: errors become `ApiError`                                 | `api-client.test.ts`                                                 |
 | API client: the timeout works                                        | `api-client.test.ts`                                                 |
 | Project ID validation rules                                          | `project-id.test.ts`, `new-scan.test.tsx`, `project-picker.test.tsx` |

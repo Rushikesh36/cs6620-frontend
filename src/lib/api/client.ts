@@ -36,7 +36,11 @@ function defaultMessage(status: number): string {
 export type ApiClientOptions = {
   baseUrl: string;
   getToken: () => string | null;
-  /** Called when a protected endpoint answers 401: the owner should log the user out. */
+  /**
+   * Called when a protected endpoint answers 401 or 403: the owner should log the user out.
+   * API Gateway answers a missing Authorization header with 401, but a bad or expired token with
+   * 403, and the backend uses 403 for nothing else.
+   */
   onUnauthorized: () => void;
   timeoutMs?: number;
   /** Injectable for tests. Defaults to the global fetch at call time. */
@@ -53,7 +57,10 @@ export type RequestOptions<T> = {
   body?: unknown;
   /** Every response is validated against this. */
   schema: z.ZodType<T>;
-  /** false for /login: no Authorization header, and a 401 is not a "session expired". */
+  /**
+   * false for /login: no Authorization header, and a 401 or 403 is not a "session expired".
+   * On every other request a 401 or 403 means the session is over (see `onUnauthorized`).
+   */
   auth?: boolean;
   /** From TanStack Query, so cancelled queries cancel the request. */
   signal?: AbortSignal;
@@ -127,10 +134,15 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     const parsed = parseJson(text);
 
     if (!response.ok) {
-      if (response.status === 401 && auth) onUnauthorized();
+      const sessionEnded = auth && (response.status === 401 || response.status === 403);
+      if (sessionEnded) onUnauthorized();
       const errorBody = parsed.ok ? apiErrorBodySchema.safeParse(parsed.value) : null;
       const serverMessage = errorBody?.success ? errorBody.data.error.trim() : '';
-      throw new ApiError(response.status, serverMessage || defaultMessage(response.status));
+      // API Gateway's 403 body ({"message":"Forbidden"}) says nothing useful: use our own words.
+      throw new ApiError(
+        response.status,
+        serverMessage || defaultMessage(sessionEnded ? 401 : response.status),
+      );
     }
 
     const invalid = () =>

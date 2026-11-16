@@ -33,7 +33,12 @@ export function createHandlers(baseUrl: string, backend: MockBackend) {
     async ({ request, params }: { request: Request; params: Params }) => {
       await delay(backend.options.latencyMs);
       const user = backend.authenticate(request);
-      if (!user) return errorResponse(401, 'Your login token is missing or has expired.');
+      if (!user) {
+        // Like API Gateway: no Authorization header is a 401, but a bad or expired token is a 403.
+        return request.headers.has('Authorization')
+          ? HttpResponse.json({ message: 'Forbidden' }, { status: 403 })
+          : errorResponse(401, 'Your login token is missing.');
+      }
       if (backend.shouldFailRandomly())
         return errorResponse(500, 'Mock server error (random failure is on).');
       return handle({ request, params, user });

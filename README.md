@@ -141,7 +141,7 @@ The full details are in the backend requirements page the team shares with the L
 
 **Rules the frontend relies on:**
 
-- Errors look like `{ "error": "message" }`. 401 means the token is missing or expired (the site logs out), 403 and 404 get their own friendly messages, and 5xx can be retried.
+- Errors look like `{ "error": "message" }`. On every request except `/login`, a 401 (no `Authorization` header) or a 403 (bad or expired token, which is what API Gateway sends, with a body like `{ "message": "Forbidden" }`) means the session is over and the site logs out. The backend must not use 403 for anything else. On `/login`, 401 means a wrong username or password. 404 gets its own friendly message, and 5xx can be retried.
 - The login token must be a JWT with a numeric `exp` claim. There is no refresh token.
 - Uploads go straight to S3 with an HTTP `PUT` to the pre-signed URL, with exactly the headers the API returned and **no `Authorization` header**.
 - A job that is stuck must be marked FAILED by the backend itself.

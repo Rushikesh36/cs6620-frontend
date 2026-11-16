@@ -86,7 +86,7 @@ describe('mock login and tokens', () => {
     expect(payload.exp - payload.iat).toBe(120);
   });
 
-  it('answers 401 without a token, and after the token has expired', async () => {
+  it('answers 401 without a token, and 403 for a bad or expired one (like API Gateway)', async () => {
     useBackend({ tokenMinutes: 2 });
     const noToken = await api.getTargets().catch((e: unknown) => e);
     expect(noToken).toMatchObject({ status: 401 });
@@ -95,7 +95,19 @@ describe('mock login and tokens', () => {
     await loginAs();
     await expect(api.getTargets()).resolves.toBeTruthy();
     advance(121_000);
-    await expect(api.getTargets()).rejects.toMatchObject({ status: 401 });
+    await expect(api.getTargets()).rejects.toMatchObject({ status: 403 });
+    expect(unauthorized).toHaveBeenCalledTimes(2);
+
+    token = 'not-a-token';
+    await expect(api.getTargets()).rejects.toMatchObject({ status: 403 });
+    expect(unauthorized).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends {"message":"Forbidden"} with the 403, as API Gateway does', async () => {
+    useBackend();
+    const response = await fetch(`${BASE}/targets`, { headers: { Authorization: 'Bearer nope' } });
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ message: 'Forbidden' });
   });
 });
 

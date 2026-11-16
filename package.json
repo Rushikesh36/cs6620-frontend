@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/site-files.mjs write-config",
     "build": "next build",
+    "postbuild": "node scripts/site-files.mjs strip-dev-files",
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

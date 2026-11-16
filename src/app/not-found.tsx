@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = { title: 'Page not found · Unified Security Hub' };
 
-// S3 serves this page (404.html) for any address that does not exist.
+// The host (Vercel, or S3) serves this page (404.html) for any address that does not exist.
 export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">

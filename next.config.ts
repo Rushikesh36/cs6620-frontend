@@ -1,11 +1,11 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
 
-// The site is served from an S3 static website: no Node server, so everything
+// The site is served as static files (Vercel, or an S3 website): no Node server, so everything
 // must be exportable to plain files in `out/`.
 const nextConfig: NextConfig = {
   output: 'export',
-  // `/scans/` -> `scans/index.html`, which is what S3 website hosting serves.
+  // `/scans/` -> `scans/index.html`, which static hosts (Vercel, S3 website hosting) serve.
   trailingSlash: true,
   images: { unoptimized: true },
   reactStrictMode: true,

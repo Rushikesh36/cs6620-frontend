@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-// Terraform writes this file into the S3 bucket at deploy time, so the same build
-// works in every AWS account. See public/config.example.json.
+// This file sits at the site's root and is written at deploy time (on Vercel, by
+// scripts/site-files.mjs from the API_BASE_URL variable; on S3, by Terraform), so the same code
+// works in every environment. See public/config.example.json.
 export const configSchema = z.object({
   apiBaseUrl: z
     .url({
@@ -51,7 +52,7 @@ export async function loadConfig(signal?: AbortSignal): Promise<AppConfig> {
 
   let response: Response;
   try {
-    // no-store: the file is replaced by Terraform, so never trust a cached copy.
+    // no-store: the file is replaced on every deploy, so never trust a cached copy.
     response = await fetch(CONFIG_URL, { cache: 'no-store', signal: combined });
   } catch {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');

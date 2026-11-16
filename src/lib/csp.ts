@@ -1,6 +1,7 @@
-// Content Security Policy, set with <meta> tags because the site is static files on S3 and cannot
-// send headers. Limits of that approach are in the README: meta tags cannot set
+// Content Security Policy, set with <meta> tags so it works on any static host, including S3, which
+// cannot send headers. Limits of that approach are in the README: meta tags cannot set
 // frame-ancestors, report-uri or sandbox, and only protect what loads after they are read.
+// (vercel.json adds a frame-ancestors header on Vercel.)
 
 /**
  * Everything except where the page may send requests. That part depends on the API address in

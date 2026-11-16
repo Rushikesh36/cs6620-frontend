@@ -7,7 +7,8 @@ The dashboard for Unified Security Hub (CS6620 Cloud Computing, Northeastern Uni
 - [Run it on your computer](#run-it-on-your-computer)
 - [The config.json file](#the-configjson-file)
 - [Scripts](#scripts)
-- [Deploy to S3](#deploy-to-s3)
+- [Deploy to Vercel](#deploy-to-vercel)
+- [Deploy to S3 instead](#deploy-to-s3-instead)
 - [What the backend must provide](#what-the-backend-must-provide)
 - [How it works](#how-it-works)
 - [Known limitations](#known-limitations)
@@ -69,7 +70,7 @@ The file is ignored by git, because every AWS account has its own.
 
 ## The config.json file
 
-One build works in all three AWS accounts, because the site reads its settings when it starts, from `/config.json` at its own root. In production Terraform writes this file into the S3 bucket; on your computer it is `public/config.json`.
+The site reads its settings when it starts, from `/config.json` at its own root. On Vercel that file is written during the build from the `API_BASE_URL` and `APP_ENVIRONMENT` variables ([below](#deploy-to-vercel)); on S3, Terraform writes it into the bucket; on your computer it is `public/config.json`.
 
 ```json
 {
@@ -89,17 +90,38 @@ If the file is missing or wrong, the site shows a full-page "Configuration error
 | ------------------- | --------------------------------------------------------------------------------- |
 | `npm run dev`       | Development server, talking to the API in `public/config.json`                    |
 | `npm run dev:mock`  | Development server with the fake backend                                          |
-| `npm run build`     | Builds the static site into `out/`                                                |
+| `npm run build`     | Builds the static site into `out/` (writes `public/config.json` first on Vercel)  |
 | `npm run typecheck` | TypeScript check                                                                  |
 | `npm run lint`      | ESLint                                                                            |
 | `npm run format`    | Prettier (`format:check` only reports)                                            |
 | `npm test`          | Unit and component tests (`test:coverage` adds a coverage table)                  |
 | `npm run test:e2e`  | End-to-end tests in a real browser (needs `npx playwright install chromium` once) |
-| `scripts/deploy.sh` | Builds and uploads to S3 (below)                                                  |
+| `scripts/deploy.sh` | Builds and uploads to S3 (the alternative to Vercel, below)                       |
 
 More about the tests in [tests/README.md](tests/README.md).
 
-## Deploy to S3
+## Deploy to Vercel
+
+Vercel builds the site itself on every push, so there is nothing to upload by hand.
+
+1. In Vercel, **Add New > Project**, import this GitHub repo. The Next.js preset is detected; leave the build command, output directory and install command on their defaults. Under **Node.js Version**, pick 22.x (the same as `.nvmrc`).
+2. Under **Environment Variables**, add (for Production, and Preview if you use previews):
+   - `API_BASE_URL`: the API address, starting with `https://`, for example `https://abc123.execute-api.us-east-1.amazonaws.com`.
+   - `APP_ENVIRONMENT`: the name shown in the header badge (optional; defaults to `production`, `preview` and so on).
+3. Deploy. `npm run build` first runs `scripts/site-files.mjs write-config`, which writes `public/config.json` from those variables. The build fails with a clear message if `API_BASE_URL` is missing or is not `https://`. Afterwards it removes the development files (`mockServiceWorker.js`, `config.example.json`) from `out/`.
+4. Allow the site's address in the backend's **CORS** rules (the API, and the upload bucket for `PUT`): `https://<project>.vercel.app`, plus any custom domain. Preview deployments get their own addresses, so either add each one you test or use `https://*.vercel.app` only if the backend accepts wildcards.
+
+Things to know:
+
+- `vercel.json` sets `trailingSlash` (so `/scans` goes to `/scans/`, as the site expects), `Cache-Control: no-store` on `/config.json`, and a few security headers, including `frame-ancestors 'none'`, which a `<meta>` Content Security Policy cannot set.
+- Unknown addresses get `404.html` (the app's own not-found page) with a 404 status.
+- Changing `API_BASE_URL` needs a redeploy, because the file is written at build time.
+- Do not set `NEXT_PUBLIC_USE_MOCKS` on Vercel unless you want a demo with the fake backend.
+- The site is served over HTTPS, so browsers block calls to an `http://` API. The API must be `https://`.
+
+## Deploy to S3 instead
+
+The S3 route still works. It is the alternative if the site must live in the lab account.
 
 ```bash
 aws sts get-caller-identity              # make sure you are in the right account
@@ -178,13 +200,14 @@ src/
   lib/          api client and schemas, auth, config, query setup, helpers
   mocks/        the fake backend (development and tests only)
 tests/          unit (Vitest) and e2e (Playwright)
-scripts/        deploy.sh
+scripts/        site-files.mjs (config and cleanup around the build), deploy.sh (S3)
+vercel.json     headers and trailing-slash setting for Vercel
 ```
 
 ## Known limitations
 
-- **HTTP-only hosting.** The S3 website endpoint has no HTTPS, so anyone on the same network could change the page on its way to the browser, and with it steal the login token. Use it on trusted networks, or put CloudFront with HTTPS in front if the lab account allows it. The site avoids features that need a secure page: copy buttons fall back to an older method, and it never uses `crypto.randomUUID`.
-- **The Content Security Policy is set with `<meta>` tags** (a static site cannot send headers), which has limits: it cannot set `frame-ancestors`, `report-uri` or `sandbox`, and it only covers what loads after the browser reads it, so the first request for `config.json` is not covered. Scripts need `'unsafe-inline'` because a static Next.js page carries its start-up data in inline scripts. Uploads are allowed to `https://*.amazonaws.com`, because the bucket's name is not known in advance. The policy is added in production builds only. It is two tags: a fixed one, and one with the API address that is added once `config.json` has loaded.
+- **HTTP-only hosting (S3 only).** On Vercel the site is served over HTTPS and this does not apply. The S3 website endpoint has no HTTPS, so anyone on the same network could change the page on its way to the browser, and with it steal the login token. Use it on trusted networks, or put CloudFront with HTTPS in front if the lab account allows it. The site avoids features that need a secure page: copy buttons fall back to an older method, and it never uses `crypto.randomUUID`.
+- **The Content Security Policy is set with `<meta>` tags** (a static site cannot send headers), which works on any static host but has limits: it cannot set `frame-ancestors` (on Vercel, `vercel.json` sends that as a header), `report-uri` or `sandbox`, and it only covers what loads after the browser reads it, so the first request for `config.json` is not covered. Scripts need `'unsafe-inline'` because a static Next.js page carries its start-up data in inline scripts. Uploads are allowed to `https://*.amazonaws.com`, because the bucket's name is not known in advance. The policy is added in production builds only. It is two tags: a fixed one, and one with the API address that is added once `config.json` has loaded.
 - **No refresh tokens.** When the token runs out, people log in again, and anything unsent is lost.
 - **Filters and sorting on the scans list work on the scans loaded so far**, because the API only offers a limit and a cursor.
 - **The dashboard is built from your recent projects**, because there is no "all scans" endpoint. It sees the latest 20 scans of each project you used in this browser tab.
@@ -203,12 +226,12 @@ Things the frontend needs or assumes that are not in the agreed API yet. Please 
 6. **Check uploads on the backend too.** The site blocks files over 50 MB and files that are not `.zip`, but a browser cannot see inside a file, and a pre-signed URL alone cannot limit its size.
 7. **Starting twice.** What does `POST /scans/{id}/start` answer for a scan that was already started? The fake backend answers 409.
 8. **Unknown projects.** Scan history and findings of a project with no scans should be an empty list, not a 404, because people type project IDs by hand.
-9. **Terraform** should write `config.json` and give it `Cache-Control: no-cache`.
+9. **If the site is on S3**, Terraform should write `config.json` and give it `Cache-Control: no-cache`. On Vercel the build writes it, and the backend only needs to allow the site's address in CORS.
 10. **CORS** as described above, on API Gateway and on the upload bucket.
 
 ## Troubleshooting
 
-- **"Configuration error" on the whole page.** `config.json` is missing or wrong. Locally, copy `public/config.example.json` to `public/config.json`. On S3, check that Terraform wrote it.
+- **"Configuration error" on the whole page.** `config.json` is missing or wrong. Locally, copy `public/config.example.json` to `public/config.json`. On Vercel, check that `API_BASE_URL` is set for that environment and redeploy. On S3, check that Terraform wrote it.
 - **"Another next dev server is already running".** Stop the other one (`npm run dev` and `npm run dev:mock` cannot run together in one folder).
 - **"The mock API could not start".** `public/mockServiceWorker.js` is missing, or the browser blocked service workers. Reload, or run `npx msw init public/`.
 - **Logged out straight away.** The mock token lasts `NEXT_PUBLIC_MOCK_TOKEN_MINUTES`. Check `.env.local`.

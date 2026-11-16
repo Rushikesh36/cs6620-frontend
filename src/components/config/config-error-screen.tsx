@@ -34,8 +34,8 @@ export function ConfigErrorScreen({ error, onRetry }: { error: ConfigError; onRe
 }`}
           </pre>
           <p className="text-muted-foreground">
-            Deployed site: ask whoever manages the Terraform setup to check that the file was
-            uploaded. Running locally: copy{' '}
+            Deployed site: ask whoever manages the deployment to check that the file exists (on
+            Vercel it is built from the API_BASE_URL variable). Running locally: copy{' '}
             <code className="font-mono">public/config.example.json</code> to{' '}
             <code className="font-mono">public/config.json</code>.
           </p>
